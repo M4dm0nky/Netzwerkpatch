@@ -81,17 +81,24 @@
       </div>
       <div class="modal-field">
         <label>Gerätetyp</label>
-        <select id="newDeviceType">
-          <option value="managed-switch">Managed Switch</option>
-          <option value="poe-switch">PoE Switch</option>
-          <option value="gigabit-switch">Gigabit Switch</option>
-          <option value="unmanaged-switch">Unmanaged Switch</option>
-        </select>
+        <div style="display:flex;gap:16px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="radio" name="newDeviceTypeRadio" value="managed" checked> Managed
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="radio" name="newDeviceTypeRadio" value="unmanaged"> Unmanaged
+          </label>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="newDevicePoe"> PoE
+        </label>
       </div>
       <div class="port-count-row">
         <div class="port-count-field">
           <label>RJ45 Ports (0–24)</label>
-          <input type="number" id="newDeviceRJ45" value="24" min="0" max="24" oninput="updateDevicePreview()">
+          <input type="number" id="newDeviceRJ45" value="10" min="0" max="24" oninput="updateDevicePreview()">
         </div>
         <div class="port-count-field">
           <label>SFP Ports (0–4)</label>

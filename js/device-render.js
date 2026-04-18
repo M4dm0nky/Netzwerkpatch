@@ -85,10 +85,11 @@ function buildSwitchCard(device) {
 
 function deviceTypeLabel(type) {
   const map = {
-    'managed-switch':   'MANAGED SWITCH',
-    'poe-switch':       'POE SWITCH',
-    'gigabit-switch':   'GIGABIT SWITCH',
-    'unmanaged-switch': 'SWITCH',
+    'managed-switch':       'MANAGED SWITCH',
+    'poe-switch':           'POE SWITCH',
+    'gigabit-switch':       'GIGABIT SWITCH',
+    'unmanaged-switch':     'SWITCH',
+    'poe-unmanaged-switch': 'POE SWITCH',
   };
   return map[type] || 'SWITCH';
 }

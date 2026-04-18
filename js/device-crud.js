@@ -9,13 +9,14 @@ const DEFAULT_SPEED_SFP  = '10G';
 function openNetworkDeviceModal() {
   // Felder zurücksetzen
   const nameEl = document.getElementById('newDeviceName');
-  const typeEl = document.getElementById('newDeviceType');
   const rj45El = document.getElementById('newDeviceRJ45');
   const sfpEl  = document.getElementById('newDeviceSFP');
+  const poeEl  = document.getElementById('newDevicePoe');
 
   if (nameEl) nameEl.value = '';
-  if (typeEl) typeEl.value = 'managed-switch';
-  if (rj45El) rj45El.value = '24';
+  document.querySelectorAll('input[name="newDeviceTypeRadio"]').forEach(r => { r.checked = r.value === 'managed'; });
+  if (poeEl)  poeEl.checked = false;
+  if (rj45El) rj45El.value = '10';
   if (sfpEl)  sfpEl.value  = '0';
 
   updateDevicePreview();
@@ -27,7 +28,7 @@ function updateDevicePreview() {
   const previewEl = document.getElementById('newDevicePreview');
   if (!previewEl) return;
 
-  const rj45 = parseInt(document.getElementById('newDeviceRJ45')?.value || 24);
+  const rj45 = parseInt(document.getElementById('newDeviceRJ45')?.value || 10);
   const sfp  = parseInt(document.getElementById('newDeviceSFP')?.value  || 0);
   const total = rj45 + sfp;
 
@@ -70,8 +71,12 @@ function confirmNewDevice() {
   }
   if (nameFieldEl) nameFieldEl.classList.remove('has-error');
 
-  const type  = typeEl  ? typeEl.value  : 'managed-switch';
-  const rj45  = Math.min(24, Math.max(0, parseInt(rj45El?.value  || 24)));
+  const isManaged = document.querySelector('input[name="newDeviceTypeRadio"]:checked')?.value === 'managed';
+  const isPoe     = document.getElementById('newDevicePoe')?.checked;
+  const type = isManaged
+    ? (isPoe ? 'poe-switch' : 'managed-switch')
+    : (isPoe ? 'poe-unmanaged-switch' : 'unmanaged-switch');
+  const rj45  = Math.min(24, Math.max(0, parseInt(rj45El?.value  || 10)));
   const sfp   = Math.min(4,  Math.max(0, parseInt(sfpEl?.value   || 0)));
 
   if (rj45 + sfp < 1) {

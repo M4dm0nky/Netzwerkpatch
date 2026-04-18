@@ -1,0 +1,182 @@
+{
+  "appVersion": "v0.1.2",
+  "projectName": "testprojekt",
+  "created": "2026-04-18T20:19:41.783Z",
+  "savedAt": "2026-04-18T20:20:24.371Z",
+  "devices": [
+    {
+      "id": "fdac0b7d-9556-48e9-b8cc-3456d5261609",
+      "name": "switch 1",
+      "type": "managed-switch",
+      "rj45Count": 10,
+      "sfpCount": 2,
+      "notes": "",
+      "ports": [
+        {
+          "uid": 1,
+          "id": 1,
+          "type": "rj45",
+          "label": "",
+          "notes": "",
+          "active": false,
+          "speed": "1G",
+          "mode": "disabled",
+          "accessVlan": 1,
+          "taggedVlans": [],
+          "nativeVlan": 1
+        },
+        {
+          "uid": 2,
+          "id": 2,
+          "type": "rj45",
+          "label": "",
+          "notes": "",
+          "active": false,
+          "speed": "1G",
+          "mode": "disabled",
+          "accessVlan": 1,
+          "taggedVlans": [],
+          "nativeVlan": 1
+        },
+        {
+          "uid": 3,
+          "id": 3,
+          "type": "rj45",
+          "label": "",
+          "notes": "",
+          "active": false,
+          "speed": "1G",
+          "mode": "disabled",
+          "accessVlan": 1,
+          "taggedVlans": [],
+          "nativeVlan": 1
+        },
+        {
+          "uid": 4,
+          "id": 4,
+          "type": "rj45",
+          "label": "",
+          "notes": "",
+          "active": false,
+          "speed": "1G",
+          "mode": "disabled",
+          "accessVlan": 1,
+          "taggedVlans": [],
+          "nativeVlan": 1
+        },
+        {
+          "uid": 5,
+          "id": 5,
+          "type": "rj45",
+          "label": "",
+          "notes": "",
+          "active": false,
+          "speed": "1G",
+          "mode": "disabled",
+          "accessVlan": 1,
+          "taggedVlans": [],
+          "nativeVlan": 1
+        },
+        {
+          "uid": 6,
+          "id": 6,
+          "type": "rj45",
+          "label": "",
+          "notes": "",
+          "active": false,
+          "speed": "1G",
+          "mode": "disabled",
+          "accessVlan": 1,
+          "taggedVlans": [],
+          "nativeVlan": 1
+        },
+        {
+          "uid": 7,
+          "id": 7,
+          "type": "rj45",
+          "label": "",
+          "notes": "",
+          "active": false,
+          "speed": "1G",
+          "mode": "disabled",
+          "accessVlan": 1,
+          "taggedVlans": [],
+          "nativeVlan": 1
+        },
+        {
+          "uid": 8,
+          "id": 8,
+          "type": "rj45",
+          "label": "",
+          "notes": "",
+          "active": false,
+          "speed": "1G",
+          "mode": "disabled",
+          "accessVlan": 1,
+          "taggedVlans": [],
+          "nativeVlan": 1
+        },
+        {
+          "uid": 9,
+          "id": 9,
+          "type": "rj45",
+          "label": "",
+          "notes": "",
+          "active": false,
+          "speed": "1G",
+          "mode": "disabled",
+          "accessVlan": 1,
+          "taggedVlans": [],
+          "nativeVlan": 1
+        },
+        {
+          "uid": 10,
+          "id": 10,
+          "type": "rj45",
+          "label": "",
+          "notes": "",
+          "active": false,
+          "speed": "1G",
+          "mode": "disabled",
+          "accessVlan": 1,
+          "taggedVlans": [],
+          "nativeVlan": 1
+        },
+        {
+          "uid": 101,
+          "id": 1,
+          "type": "sfp",
+          "label": "",
+          "notes": "",
+          "active": false,
+          "speed": "10G",
+          "mode": "disabled",
+          "accessVlan": 1,
+          "taggedVlans": [],
+          "nativeVlan": 1
+        },
+        {
+          "uid": 102,
+          "id": 2,
+          "type": "sfp",
+          "label": "",
+          "notes": "",
+          "active": false,
+          "speed": "10G",
+          "mode": "disabled",
+          "accessVlan": 1,
+          "taggedVlans": [],
+          "nativeVlan": 1
+        }
+      ]
+    }
+  ],
+  "vlans": [
+    {
+      "id": 1,
+      "name": "Default",
+      "color": "#4a90e8",
+      "description": "Standard-VLAN"
+    }
+  ]
+}

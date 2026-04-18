@@ -1865,17 +1865,24 @@ body {
       </div>
       <div class="modal-field">
         <label>Gerätetyp</label>
-        <select id="newDeviceType">
-          <option value="managed-switch">Managed Switch</option>
-          <option value="poe-switch">PoE Switch</option>
-          <option value="gigabit-switch">Gigabit Switch</option>
-          <option value="unmanaged-switch">Unmanaged Switch</option>
-        </select>
+        <div style="display:flex;gap:16px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="radio" name="newDeviceTypeRadio" value="managed" checked> Managed
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="radio" name="newDeviceTypeRadio" value="unmanaged"> Unmanaged
+          </label>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="newDevicePoe"> PoE
+        </label>
       </div>
       <div class="port-count-row">
         <div class="port-count-field">
           <label>RJ45 Ports (0–24)</label>
-          <input type="number" id="newDeviceRJ45" value="24" min="0" max="24" oninput="updateDevicePreview()">
+          <input type="number" id="newDeviceRJ45" value="10" min="0" max="24" oninput="updateDevicePreview()">
         </div>
         <div class="port-count-field">
           <label>SFP Ports (0–4)</label>
@@ -2387,10 +2394,11 @@ function buildSwitchCard(device) {
 
 function deviceTypeLabel(type) {
   const map = {
-    'managed-switch':   'MANAGED SWITCH',
-    'poe-switch':       'POE SWITCH',
-    'gigabit-switch':   'GIGABIT SWITCH',
-    'unmanaged-switch': 'SWITCH',
+    'managed-switch':       'MANAGED SWITCH',
+    'poe-switch':           'POE SWITCH',
+    'gigabit-switch':       'GIGABIT SWITCH',
+    'unmanaged-switch':     'SWITCH',
+    'poe-unmanaged-switch': 'POE SWITCH',
   };
   return map[type] || 'SWITCH';
 }
@@ -2831,13 +2839,14 @@ const DEFAULT_SPEED_SFP  = '10G';
 function openNetworkDeviceModal() {
   // Felder zurücksetzen
   const nameEl = document.getElementById('newDeviceName');
-  const typeEl = document.getElementById('newDeviceType');
   const rj45El = document.getElementById('newDeviceRJ45');
   const sfpEl  = document.getElementById('newDeviceSFP');
+  const poeEl  = document.getElementById('newDevicePoe');
 
   if (nameEl) nameEl.value = '';
-  if (typeEl) typeEl.value = 'managed-switch';
-  if (rj45El) rj45El.value = '24';
+  document.querySelectorAll('input[name="newDeviceTypeRadio"]').forEach(r => { r.checked = r.value === 'managed'; });
+  if (poeEl)  poeEl.checked = false;
+  if (rj45El) rj45El.value = '10';
   if (sfpEl)  sfpEl.value  = '0';
 
   updateDevicePreview();
@@ -2849,7 +2858,7 @@ function updateDevicePreview() {
   const previewEl = document.getElementById('newDevicePreview');
   if (!previewEl) return;
 
-  const rj45 = parseInt(document.getElementById('newDeviceRJ45')?.value || 24);
+  const rj45 = parseInt(document.getElementById('newDeviceRJ45')?.value || 10);
   const sfp  = parseInt(document.getElementById('newDeviceSFP')?.value  || 0);
   const total = rj45 + sfp;
 
@@ -2892,8 +2901,12 @@ function confirmNewDevice() {
   }
   if (nameFieldEl) nameFieldEl.classList.remove('has-error');
 
-  const type  = typeEl  ? typeEl.value  : 'managed-switch';
-  const rj45  = Math.min(24, Math.max(0, parseInt(rj45El?.value  || 24)));
+  const isManaged = document.querySelector('input[name="newDeviceTypeRadio"]:checked')?.value === 'managed';
+  const isPoe     = document.getElementById('newDevicePoe')?.checked;
+  const type = isManaged
+    ? (isPoe ? 'poe-switch' : 'managed-switch')
+    : (isPoe ? 'poe-unmanaged-switch' : 'unmanaged-switch');
+  const rj45  = Math.min(24, Math.max(0, parseInt(rj45El?.value  || 10)));
   const sfp   = Math.min(4,  Math.max(0, parseInt(sfpEl?.value   || 0)));
 
   if (rj45 + sfp < 1) {
