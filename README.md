@@ -3,7 +3,9 @@
 Browserbasiertes Netzwerk-Dokumentationstool für Switch-Port- und VLAN-Verwaltung.
 Kein Server, keine Abhängigkeiten — eine einzige HTML-Datei.
 
-**Version:** v0.1.2
+**Version:** v0.1.2 · [![App öffnen](https://img.shields.io/badge/App-%C3%B6ffnen-4a90e8?style=flat-square)](https://m4dm0nky.github.io/Netzwerkpatch/netzwerkpatch.html)
+
+> **Direktlink:** [https://m4dm0nky.github.io/Netzwerkpatch/netzwerkpatch.html](https://m4dm0nky.github.io/Netzwerkpatch/netzwerkpatch.html)
 
 ## Features
 
