@@ -696,7 +696,7 @@ body {
 }
 
 /* ===================================================================
-   RJ45 PORT — Trapezförmige Buchse mit 8 Kontaktstiften
+   RJ45 PORT — Industrielle Buchse mit VLAN-Leuchtring
    =================================================================== */
 .rj45-port {
   display: flex;
@@ -704,31 +704,61 @@ body {
   align-items: center;
   gap: 3px;
   cursor: pointer;
-  transition: transform 0.1s;
+  transition: transform 0.15s;
   position: relative;
-  width: 52px;
+  width: 58px;
   padding: 3px;
-  border-radius: 3px;
+  border-radius: 4px;
   border: 1px solid transparent;
 }
 .rj45-port:hover {
   transform: translateY(-2px);
   background: rgba(255,255,255,0.03);
 }
-.rj45-port.drag-over {
-  border-color: var(--accent-green);
-  background: rgba(74,232,160,0.06);
-  box-shadow: 0 0 10px rgba(74,232,160,0.3);
+.rj45-port.drag-over .port-vlan-ring {
+  border-color: var(--accent-green) !important;
+  box-shadow: 0 0 14px rgba(74,232,160,0.6) !important;
 }
 
-/* Port VLAN Farbkodierung am Rand */
-.rj45-port.vlan-assigned {
-  border-color: var(--port-vlan-color, var(--rack-border));
-  box-shadow: 0 0 6px var(--port-vlan-glow, transparent);
+/* VLAN-Leuchtring — ovaler Kragen um die Buchse */
+.port-vlan-ring {
+  border-radius: 50%;
+  border: 3px solid rgba(100,110,135,0.2);
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.3s, box-shadow 0.4s;
+  background: radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.04), transparent 70%);
+  flex-shrink: 0;
 }
-.rj45-port.vlan-trunk {
+
+/* Access-Port: farbiger Leuchtring mit Pulsanimation */
+.rj45-port.vlan-assigned .port-vlan-ring,
+.sfp-port.vlan-assigned .port-vlan-ring {
+  border-color: var(--port-vlan-color);
+  box-shadow:
+    0 0 8px  var(--port-vlan-color),
+    0 0 20px var(--port-vlan-glow),
+    inset 0 0 6px var(--port-vlan-glow);
+  animation: ringPulse 2.5s ease-in-out infinite;
+}
+
+/* Trunk-Port: grauer gestrichelter Ring */
+.rj45-port.vlan-trunk .port-vlan-ring,
+.sfp-port.vlan-trunk .port-vlan-ring {
+  border-color: #777777;
   border-style: dashed;
-  border-color: var(--port-vlan-color, var(--rack-border));
+  box-shadow: 0 0 6px rgba(119,119,119,0.45);
+}
+
+@keyframes ringPulse {
+  0%, 100% {
+    box-shadow: 0 0 6px var(--port-vlan-color), 0 0 14px var(--port-vlan-glow);
+  }
+  50% {
+    box-shadow: 0 0 12px var(--port-vlan-color), 0 0 26px var(--port-vlan-glow), inset 0 0 8px var(--port-vlan-glow);
+  }
 }
 
 /* Status-LED (oben rechts über der Buchse) */
@@ -763,17 +793,18 @@ body {
   animation: lampGlow 2.8s ease-in-out infinite;
 }
 
-/* RJ45 Buchsen-Gehäuse */
+/* RJ45 Buchsen-Gehäuse — industrieller Anthrazit-Look */
 .rj45-housing {
-  width: 28px;
-  height: 24px;
-  background: linear-gradient(160deg, #aaaaaa 0%, #777777 55%, #444444 100%);
-  border: 1.5px solid #999;
-  border-radius: 2px 2px 3px 3px;
+  width: 32px;
+  height: 28px;
+  background: linear-gradient(165deg, #888888 0%, #555555 45%, #333333 80%, #222222 100%);
+  border: 1.5px solid #666;
+  border-radius: 2px 2px 4px 4px;
   position: relative;
   box-shadow:
-    0 2px 5px rgba(0,0,0,0.6),
-    inset 0 1px 2px rgba(255,255,255,0.3);
+    0 3px 8px rgba(0,0,0,0.8),
+    inset 0 1px 3px rgba(255,255,255,0.2),
+    inset 0 -1px 2px rgba(0,0,0,0.5);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -782,15 +813,16 @@ body {
 
 /* Trapezförmige RJ45-Öffnung */
 .rj45-opening {
-  width: 22px;
-  height: 16px;
+  width: 26px;
+  height: 19px;
   background: var(--rj45-inner);
-  clip-path: polygon(8% 0%, 92% 0%, 98% 100%, 2% 100%);
+  clip-path: polygon(7% 0%, 93% 0%, 99% 100%, 1% 100%);
   position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   padding-bottom: 2px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.9);
 }
 
 /* 8 Kontaktstifte (Goldfarben, sichtbar in der Öffnung) */
@@ -801,10 +833,10 @@ body {
 }
 .rj45-pin {
   width: 2px;
-  height: 6px;
-  background: linear-gradient(180deg, #ffdd88 0%, #cc9900 100%);
+  height: 7px;
+  background: linear-gradient(180deg, #ffe8aa 0%, #d4a800 100%);
   border-radius: 0.5px;
-  box-shadow: 0 0 2px rgba(255,200,0,0.4);
+  box-shadow: 0 0 3px rgba(255,200,0,0.5);
 }
 
 /* 7-Segment Anzeige für Portnummer */
@@ -872,7 +904,7 @@ body {
 }
 
 /* ===================================================================
-   SFP PORT — Schmaler Fiber-Slot
+   SFP PORT — Fiber-Slot mit VLAN-Leuchtring
    =================================================================== */
 .sfp-port {
   display: flex;
@@ -880,42 +912,34 @@ body {
   align-items: center;
   gap: 3px;
   cursor: pointer;
-  transition: transform 0.1s;
+  transition: transform 0.15s;
   position: relative;
-  width: 40px;
+  width: 46px;
   padding: 3px;
-  border-radius: 3px;
+  border-radius: 4px;
   border: 1px solid transparent;
 }
 .sfp-port:hover {
   transform: translateY(-2px);
   background: rgba(255,255,255,0.03);
 }
-.sfp-port.drag-over {
-  border-color: var(--accent-green);
-  background: rgba(74,232,160,0.06);
-  box-shadow: 0 0 10px rgba(74,232,160,0.3);
-}
-.sfp-port.vlan-assigned {
-  border-color: var(--port-vlan-color, var(--rack-border));
-  box-shadow: 0 0 6px var(--port-vlan-glow, transparent);
-}
-.sfp-port.vlan-trunk {
-  border-style: dashed;
-  border-color: var(--port-vlan-color, var(--rack-border));
+.sfp-port.drag-over .port-vlan-ring {
+  border-color: var(--accent-green) !important;
+  box-shadow: 0 0 14px rgba(74,232,160,0.6) !important;
 }
 
 /* SFP Slot-Gehäuse */
 .sfp-housing {
-  width: 20px;
-  height: 26px;
-  background: linear-gradient(160deg, #888888 0%, #555555 55%, #333333 100%);
-  border: 1.5px solid #777;
+  width: 22px;
+  height: 28px;
+  background: linear-gradient(165deg, #888888 0%, #555555 45%, #333333 80%, #222222 100%);
+  border: 1.5px solid #666;
   border-radius: 2px;
   position: relative;
   box-shadow:
-    0 2px 5px rgba(0,0,0,0.6),
-    inset 0 1px 2px rgba(255,255,255,0.2);
+    0 3px 8px rgba(0,0,0,0.8),
+    inset 0 1px 3px rgba(255,255,255,0.2),
+    inset 0 -1px 2px rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2250,7 +2274,7 @@ function confirmNewProject() {
   renderVlanPanel();
   // Standardmäßig VLAN 1 anlegen
   if (state.vlans.length === 0) {
-    state.vlans.push({ id: 1, name: 'Default', color: '#4a90e8', description: 'Standard-VLAN' });
+    state.vlans.push({ id: 1, name: 'Management', color: '#0066ff', description: 'Management-VLAN' });
     renderVlanPanel();
   }
   showToast('Neues Projekt angelegt: ' + name, 'success');
@@ -2466,7 +2490,10 @@ function buildRJ45Port(device, port) {
   led.className = 'port-status-led' + (port.mode !== 'disabled' ? ' active' : '');
   wrap.appendChild(led);
 
-  // Buchsen-Gehäuse
+  // Buchsen-Gehäuse im Ring-Wrapper
+  const ring = document.createElement('div');
+  ring.className = 'port-vlan-ring';
+
   const housing = document.createElement('div');
   housing.className = 'rj45-housing';
 
@@ -2482,7 +2509,8 @@ function buildRJ45Port(device, port) {
   }
   opening.appendChild(pins);
   housing.appendChild(opening);
-  wrap.appendChild(housing);
+  ring.appendChild(housing);
+  wrap.appendChild(ring);
 
   // 7-Segment Portnummer (skaliert)
   const segWrap = document.createElement('div');
@@ -2545,7 +2573,10 @@ function buildSFPPort(device, port) {
   led.className = 'port-status-led' + (port.mode !== 'disabled' ? ' active' : '');
   wrap.appendChild(led);
 
-  // Slot-Gehäuse
+  // Slot-Gehäuse im Ring-Wrapper
+  const ring = document.createElement('div');
+  ring.className = 'port-vlan-ring';
+
   const housing = document.createElement('div');
   housing.className = 'sfp-housing';
 
@@ -2556,7 +2587,8 @@ function buildSFPPort(device, port) {
   sym.className = 'sfp-symbol';
   slot.appendChild(sym);
   housing.appendChild(slot);
-  wrap.appendChild(housing);
+  ring.appendChild(housing);
+  wrap.appendChild(ring);
 
   // Typ-Label
   const typeLbl = document.createElement('div');
@@ -2608,13 +2640,15 @@ function applyPortVlanStyle(portEl, port) {
 
   if (port.mode === 'disabled') return;
 
-  const color = getPortPrimaryColor(port);
-  if (color) {
-    portEl.style.setProperty('--port-vlan-color', color);
-    portEl.style.setProperty('--port-vlan-glow', color + '60');
-    if (port.mode === 'trunk') {
-      portEl.classList.add('vlan-trunk');
-    } else {
+  if (port.mode === 'trunk') {
+    portEl.style.setProperty('--port-vlan-color', '#777777');
+    portEl.style.setProperty('--port-vlan-glow', '#77777760');
+    portEl.classList.add('vlan-trunk');
+  } else {
+    const color = getPortPrimaryColor(port);
+    if (color) {
+      portEl.style.setProperty('--port-vlan-color', color);
+      portEl.style.setProperty('--port-vlan-glow', color + '99');
       portEl.classList.add('vlan-assigned');
     }
   }
@@ -2883,7 +2917,7 @@ function createDevice(name, type, rj45Count, sfpCount) {
       notes:       '',
       active:      false,
       speed:       DEFAULT_SPEED_RJ45,
-      mode:        'disabled',
+      mode:        'access',
       accessVlan:  1,
       taggedVlans: [],
       nativeVlan:  1,
@@ -2899,7 +2933,7 @@ function createDevice(name, type, rj45Count, sfpCount) {
       notes:       '',
       active:      false,
       speed:       DEFAULT_SPEED_SFP,
-      mode:        'disabled',
+      mode:        'access',
       accessVlan:  1,
       taggedVlans: [],
       nativeVlan:  1,
@@ -2941,9 +2975,22 @@ function deleteDevice(id) {
 // ============================================================
 
 const VLAN_PRESETS = [
-  '#4a90e8','#4ae8a0','#e8a04a','#e84a9f','#a04ae8',
-  '#e8e84a','#4ae8e8','#e84a4a','#4a6ee8','#88e84a',
-  '#e8604a','#c84ae8','#4ae8c8','#e8b44a','#8ae84a','#e84a74'
+  '#0066ff', // Blau
+  '#ff0000', // Rot
+  '#00cc00', // Grün
+  '#ffdd00', // Gelb
+  '#9900ff', // Lila
+  '#00ccff', // Cyan
+  '#ff8800', // Orange
+  '#ff00ff', // Magenta
+  '#ffffff', // Weiß
+  '#00ffaa', // Mint
+  '#ff6600', // Dunkelorange
+  '#6600cc', // Violett
+  '#00ff00', // Hellgrün
+  '#ff0088', // Pink
+  '#0099ff', // Hellblau
+  '#ffff00', // Reingelb
 ];
 
 // ============================================================

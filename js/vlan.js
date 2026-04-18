@@ -3,9 +3,22 @@
 // ============================================================
 
 const VLAN_PRESETS = [
-  '#4a90e8','#4ae8a0','#e8a04a','#e84a9f','#a04ae8',
-  '#e8e84a','#4ae8e8','#e84a4a','#4a6ee8','#88e84a',
-  '#e8604a','#c84ae8','#4ae8c8','#e8b44a','#8ae84a','#e84a74'
+  '#0066ff', // Blau
+  '#ff0000', // Rot
+  '#00cc00', // Grün
+  '#ffdd00', // Gelb
+  '#9900ff', // Lila
+  '#00ccff', // Cyan
+  '#ff8800', // Orange
+  '#ff00ff', // Magenta
+  '#ffffff', // Weiß
+  '#00ffaa', // Mint
+  '#ff6600', // Dunkelorange
+  '#6600cc', // Violett
+  '#00ff00', // Hellgrün
+  '#ff0088', // Pink
+  '#0099ff', // Hellblau
+  '#ffff00', // Reingelb
 ];
 
 // ============================================================

@@ -188,7 +188,10 @@ function buildRJ45Port(device, port) {
   led.className = 'port-status-led' + (port.mode !== 'disabled' ? ' active' : '');
   wrap.appendChild(led);
 
-  // Buchsen-Gehäuse
+  // Buchsen-Gehäuse im Ring-Wrapper
+  const ring = document.createElement('div');
+  ring.className = 'port-vlan-ring';
+
   const housing = document.createElement('div');
   housing.className = 'rj45-housing';
 
@@ -204,7 +207,8 @@ function buildRJ45Port(device, port) {
   }
   opening.appendChild(pins);
   housing.appendChild(opening);
-  wrap.appendChild(housing);
+  ring.appendChild(housing);
+  wrap.appendChild(ring);
 
   // 7-Segment Portnummer (skaliert)
   const segWrap = document.createElement('div');
@@ -267,7 +271,10 @@ function buildSFPPort(device, port) {
   led.className = 'port-status-led' + (port.mode !== 'disabled' ? ' active' : '');
   wrap.appendChild(led);
 
-  // Slot-Gehäuse
+  // Slot-Gehäuse im Ring-Wrapper
+  const ring = document.createElement('div');
+  ring.className = 'port-vlan-ring';
+
   const housing = document.createElement('div');
   housing.className = 'sfp-housing';
 
@@ -278,7 +285,8 @@ function buildSFPPort(device, port) {
   sym.className = 'sfp-symbol';
   slot.appendChild(sym);
   housing.appendChild(slot);
-  wrap.appendChild(housing);
+  ring.appendChild(housing);
+  wrap.appendChild(ring);
 
   // Typ-Label
   const typeLbl = document.createElement('div');
@@ -330,13 +338,15 @@ function applyPortVlanStyle(portEl, port) {
 
   if (port.mode === 'disabled') return;
 
-  const color = getPortPrimaryColor(port);
-  if (color) {
-    portEl.style.setProperty('--port-vlan-color', color);
-    portEl.style.setProperty('--port-vlan-glow', color + '60');
-    if (port.mode === 'trunk') {
-      portEl.classList.add('vlan-trunk');
-    } else {
+  if (port.mode === 'trunk') {
+    portEl.style.setProperty('--port-vlan-color', '#777777');
+    portEl.style.setProperty('--port-vlan-glow', '#77777760');
+    portEl.classList.add('vlan-trunk');
+  } else {
+    const color = getPortPrimaryColor(port);
+    if (color) {
+      portEl.style.setProperty('--port-vlan-color', color);
+      portEl.style.setProperty('--port-vlan-glow', color + '99');
       portEl.classList.add('vlan-assigned');
     }
   }
