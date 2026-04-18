@@ -336,6 +336,8 @@ function openVlanPopover(deviceId, portId, anchorEl) {
   popoverDeviceId = deviceId;
   popoverPortId   = portId;
 
+  const isManagementPort = port.id === 1 && port.type === 'rj45';
+
   const pop = document.createElement('div');
   pop.className = 'vlan-popover';
   pop.id = 'vlanPopover';
@@ -344,8 +346,11 @@ function openVlanPopover(deviceId, portId, anchorEl) {
   const hdr = document.createElement('div');
   hdr.className = 'vlan-pop-header';
   const typeLabel = port.type === 'sfp' ? 'SFP ' : 'PORT ';
+  const mgmtBadge = isManagementPort
+    ? ' <span style="font-size:9px;background:var(--text-secondary);color:#000;padding:1px 5px;border-radius:2px;letter-spacing:1px;vertical-align:middle;">MGMT</span>'
+    : '';
   hdr.innerHTML = `
-    <span class="vlan-pop-title">${typeLabel}${port.id}</span>
+    <span class="vlan-pop-title">${typeLabel}${port.id}${mgmtBadge}</span>
     <button class="vlan-pop-close" onclick="closeVlanPopover()">✕</button>
   `;
   pop.appendChild(hdr);
@@ -354,65 +359,78 @@ function openVlanPopover(deviceId, portId, anchorEl) {
   const body = document.createElement('div');
   body.className = 'vlan-pop-body';
 
-  // Modus
-  body.innerHTML += `
-    <div class="vlan-pop-row">
-      <label class="vlan-pop-label">MODUS</label>
-      <div class="pop-mode-group">
-        <label class="pop-mode-opt">
-          <input type="radio" name="popMode" value="disabled" ${port.mode==='disabled'?'checked':''}>
-          <span>Status</span>
-        </label>
-        <label class="pop-mode-opt">
-          <input type="radio" name="popMode" value="access" ${port.mode==='access'?'checked':''}>
-          <span>VLAN</span>
-        </label>
-        <label class="pop-mode-opt">
-          <input type="radio" name="popMode" value="trunk" ${port.mode==='trunk'?'checked':''}>
-          <span>Trunk</span>
-        </label>
+  if (isManagementPort) {
+    // Management Port: nur Status / Aktiv, VLAN 1 fest
+    body.innerHTML = `
+      <div class="vlan-pop-row">
+        <label class="vlan-pop-label">MODUS</label>
+        <div class="pop-mode-group">
+          <label class="pop-mode-opt">
+            <input type="radio" name="popMode" value="disabled" ${port.mode==='disabled'?'checked':''}>
+            <span>Status</span>
+          </label>
+          <label class="pop-mode-opt">
+            <input type="radio" name="popMode" value="access" ${port.mode!=='disabled'?'checked':''}>
+            <span>Aktiv</span>
+          </label>
+        </div>
       </div>
-    </div>
-  `;
+      <div class="vlan-pop-row">
+        <label class="vlan-pop-label">VLAN</label>
+        <div style="display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:12px;color:var(--text-secondary);padding:6px 0;">
+          <span class="vcs-dot" style="background:var(--text-secondary);opacity:0.5;flex-shrink:0;"></span>
+          <span>1 — Management</span>
+        </div>
+      </div>
+    `;
+  } else {
+    // Normaler Port: Status / VLAN / Trunk, VLANs 2-12
+    const filteredVlans = state.vlans.filter(v => v.id >= 2 && v.id <= 12);
 
-  // Access VLAN (Custom Select)
-  const accessRow = document.createElement('div');
-  accessRow.className = 'vlan-pop-row';
-  accessRow.id = 'popAccessRow';
-  accessRow.innerHTML = '<label class="vlan-pop-label">ACCESS VLAN</label>';
-  accessRow.appendChild(buildVcsSelect('popAccessVlan', state.vlans, port.accessVlan));
-  body.appendChild(accessRow);
+    body.innerHTML = `
+      <div class="vlan-pop-row">
+        <label class="vlan-pop-label">MODUS</label>
+        <div class="pop-mode-group">
+          <label class="pop-mode-opt">
+            <input type="radio" name="popMode" value="disabled" ${port.mode==='disabled'?'checked':''}>
+            <span>Status</span>
+          </label>
+          <label class="pop-mode-opt">
+            <input type="radio" name="popMode" value="access" ${port.mode==='access'?'checked':''}>
+            <span>VLAN</span>
+          </label>
+          <label class="pop-mode-opt">
+            <input type="radio" name="popMode" value="trunk" ${port.mode==='trunk'?'checked':''}>
+            <span>Trunk</span>
+          </label>
+        </div>
+      </div>
+    `;
 
-  // Trunk: Native VLAN
-  const nativeRow = document.createElement('div');
-  nativeRow.className = 'vlan-pop-row';
-  nativeRow.id = 'popNativeRow';
-  nativeRow.innerHTML = '<label class="vlan-pop-label">NATIVE VLAN</label>';
-  nativeRow.appendChild(buildVcsSelect('popNativeVlan', state.vlans, port.nativeVlan));
-  body.appendChild(nativeRow);
+    // Access VLAN
+    const accessRow = document.createElement('div');
+    accessRow.className = 'vlan-pop-row';
+    accessRow.id = 'popAccessRow';
+    accessRow.innerHTML = '<label class="vlan-pop-label">ACCESS VLAN</label>';
+    accessRow.appendChild(buildVcsSelect('popAccessVlan', filteredVlans, port.accessVlan));
+    body.appendChild(accessRow);
 
-  // Trunk: Tagged VLANs (Multi)
-  const taggedRow = document.createElement('div');
-  taggedRow.className = 'vlan-pop-row';
-  taggedRow.id = 'popTaggedRow';
-  taggedRow.innerHTML = '<label class="vlan-pop-label">TAGGED VLANS</label>';
-  taggedRow.appendChild(buildVcsMulti('popTaggedVlans', state.vlans, port.taggedVlans));
-  body.appendChild(taggedRow);
+    // Trunk: Native VLAN
+    const nativeRow = document.createElement('div');
+    nativeRow.className = 'vlan-pop-row';
+    nativeRow.id = 'popNativeRow';
+    nativeRow.innerHTML = '<label class="vlan-pop-label">NATIVE VLAN</label>';
+    nativeRow.appendChild(buildVcsSelect('popNativeVlan', filteredVlans, port.nativeVlan));
+    body.appendChild(nativeRow);
 
-  // Geschwindigkeit
-  const speeds = ['100M','1G','2.5G','10G','25G'];
-  const speedOptions = speeds.map(s =>
-    `<option value="${s}" ${s===port.speed?'selected':''}>${s}</option>`
-  ).join('');
-  const speedRow = document.createElement('div');
-  speedRow.className = 'vlan-pop-row';
-  speedRow.innerHTML = `
-    <label class="vlan-pop-label">GESCHWINDIGKEIT</label>
-    <select id="popSpeed" class="vlan-pop-select">
-      ${speedOptions}
-    </select>
-  `;
-  body.appendChild(speedRow);
+    // Trunk: Tagged VLANs
+    const taggedRow = document.createElement('div');
+    taggedRow.className = 'vlan-pop-row';
+    taggedRow.id = 'popTaggedRow';
+    taggedRow.innerHTML = '<label class="vlan-pop-label">TAGGED VLANS</label>';
+    taggedRow.appendChild(buildVcsMulti('popTaggedVlans', filteredVlans, port.taggedVlans));
+    body.appendChild(taggedRow);
+  }
 
   // Label
   const labelRow = document.createElement('div');
@@ -446,11 +464,13 @@ function openVlanPopover(deviceId, portId, anchorEl) {
   document.body.appendChild(pop);
   currentPopover = pop;
 
-  // Modus-Sichtbarkeit schalten
-  updatePopoverMode();
-  pop.querySelectorAll('input[name="popMode"]').forEach(r => {
-    r.addEventListener('change', updatePopoverMode);
-  });
+  // Modus-Sichtbarkeit schalten (nur für normale Ports)
+  if (!isManagementPort) {
+    updatePopoverMode();
+    pop.querySelectorAll('input[name="popMode"]').forEach(r => {
+      r.addEventListener('change', updatePopoverMode);
+    });
+  }
 
   // Klick innerhalb Popover aber außerhalb eines vcs-wrap → offene Dropdown-Listen schließen
   pop.addEventListener('click', e => {
@@ -512,18 +532,6 @@ function buildVcsSelect(hiddenId, vlans, selectedId) {
       });
       list.appendChild(item);
     });
-    // "Neue VLAN" Eintrag
-    const addItem = document.createElement('div');
-    addItem.className = 'vcs-item vcs-addnew';
-    addItem.textContent = '⊕ Neue VLAN...';
-    addItem.addEventListener('mousedown', e => {
-      e.preventDefault();
-      list.classList.remove('open');
-      trigger.classList.remove('open');
-      vlanPopoverRefreshCallback = () => refreshPopoverVlanLists();
-      openNewVlanModal();
-    });
-    list.appendChild(addItem);
   }
 
   buildVcsItems();
@@ -582,16 +590,6 @@ function buildVcsMulti(containerId, vlans, selectedIds) {
       item.appendChild(lbl);
       wrap.appendChild(item);
     });
-    // "Neue VLAN" Button
-    const addBtn = document.createElement('div');
-    addBtn.className = 'vcs-multi-addnew';
-    addBtn.textContent = '⊕ Neue VLAN...';
-    addBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      vlanPopoverRefreshCallback = () => refreshPopoverVlanLists();
-      openNewVlanModal();
-    });
-    wrap.appendChild(addBtn);
   }
 
   buildMultiItems();
@@ -668,15 +666,22 @@ function closeVlanPopover() {
 }
 
 function saveVlanPopover() {
-  const mode   = document.querySelector('input[name="popMode"]:checked')?.value || 'disabled';
-  const access = parseInt(document.getElementById('popAccessVlan')?.value || 1);
-  const native = parseInt(document.getElementById('popNativeVlan')?.value || 1);
-  const tagged = Array.from(document.querySelectorAll('#popTaggedVlans .vcs-multi-cb:checked')).map(cb => parseInt(cb.value));
-  const speed  = document.getElementById('popSpeed')?.value || '1G';
-  const label  = (document.getElementById('popLabel')?.value || '').trim();
-  const notes  = (document.getElementById('popNotes')?.value || '').trim();
+  const port = getPort(popoverDeviceId, popoverPortId);
+  if (!port) return;
 
-  updatePortVlan(popoverDeviceId, popoverPortId, mode, access, tagged, native, speed, label, notes);
+  const isManagementPort = port.id === 1 && port.type === 'rj45';
+  const mode  = document.querySelector('input[name="popMode"]:checked')?.value || 'disabled';
+  const label = (document.getElementById('popLabel')?.value || '').trim();
+  const notes = (document.getElementById('popNotes')?.value || '').trim();
+
+  if (isManagementPort) {
+    updatePortVlan(popoverDeviceId, popoverPortId, mode, 1, [], 1, port.speed, label, notes);
+  } else {
+    const access = parseInt(document.getElementById('popAccessVlan')?.value || 1);
+    const native = parseInt(document.getElementById('popNativeVlan')?.value || 1);
+    const tagged = Array.from(document.querySelectorAll('#popTaggedVlans .vcs-multi-cb:checked')).map(cb => parseInt(cb.value));
+    updatePortVlan(popoverDeviceId, popoverPortId, mode, access, tagged, native, port.speed, label, notes);
+  }
   closeVlanPopover();
 }
 

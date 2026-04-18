@@ -8,16 +8,20 @@ const DEFAULT_SPEED_SFP  = '10G';
 
 function openNetworkDeviceModal() {
   // Felder zurücksetzen
-  const nameEl = document.getElementById('newDeviceName');
-  const rj45El = document.getElementById('newDeviceRJ45');
-  const sfpEl  = document.getElementById('newDeviceSFP');
-  const poeEl  = document.getElementById('newDevicePoe');
+  const nameEl      = document.getElementById('newDeviceName');
+  const rj45El      = document.getElementById('newDeviceRJ45');
+  const sfpEl       = document.getElementById('newDeviceSFP');
+  const poeEl       = document.getElementById('newDevicePoe');
+  const rj45SpeedEl = document.getElementById('newDeviceRJ45Speed');
+  const sfpSpeedEl  = document.getElementById('newDeviceSFPSpeed');
 
-  if (nameEl) nameEl.value = '';
+  if (nameEl)      nameEl.value = '';
   document.querySelectorAll('input[name="newDeviceTypeRadio"]').forEach(r => { r.checked = r.value === 'managed'; });
-  if (poeEl)  poeEl.checked = false;
-  if (rj45El) rj45El.value = '10';
-  if (sfpEl)  sfpEl.value  = '0';
+  if (poeEl)       poeEl.checked = false;
+  if (rj45El)      rj45El.value = '10';
+  if (sfpEl)       sfpEl.value  = '0';
+  if (rj45SpeedEl) rj45SpeedEl.value = '1G';
+  if (sfpSpeedEl)  sfpSpeedEl.value  = '10G';
 
   updateDevicePreview();
   openModal('newDeviceModal');
@@ -31,6 +35,9 @@ function updateDevicePreview() {
   const rj45 = parseInt(document.getElementById('newDeviceRJ45')?.value || 10);
   const sfp  = parseInt(document.getElementById('newDeviceSFP')?.value  || 0);
   const total = rj45 + sfp;
+
+  const sfpSpeedField = document.getElementById('newDeviceSFPSpeedField');
+  if (sfpSpeedField) sfpSpeedField.style.display = sfp > 0 ? '' : 'none';
 
   previewEl.innerHTML = '';
 
@@ -76,30 +83,34 @@ function confirmNewDevice() {
   const type = isManaged
     ? (isPoe ? 'poe-switch' : 'managed-switch')
     : (isPoe ? 'poe-unmanaged-switch' : 'unmanaged-switch');
-  const rj45  = Math.min(24, Math.max(0, parseInt(rj45El?.value  || 10)));
-  const sfp   = Math.min(4,  Math.max(0, parseInt(sfpEl?.value   || 0)));
+  const rj45      = Math.min(24, Math.max(0, parseInt(rj45El?.value  || 10)));
+  const sfp       = Math.min(4,  Math.max(0, parseInt(sfpEl?.value   || 0)));
+  const rj45Speed = document.getElementById('newDeviceRJ45Speed')?.value || '1G';
+  const sfpSpeed  = document.getElementById('newDeviceSFPSpeed')?.value  || '10G';
 
   if (rj45 + sfp < 1) {
     showToast('Mindestens 1 Port erforderlich.', 'warning');
     return;
   }
 
-  createDevice(name, type, rj45, sfp);
+  createDevice(name, type, rj45, sfp, rj45Speed, sfpSpeed);
   closeModal('newDeviceModal');
 }
 
-function createDevice(name, type, rj45Count, sfpCount) {
+function createDevice(name, type, rj45Count, sfpCount, rj45Speed, sfpSpeed) {
+  rj45Speed = rj45Speed || DEFAULT_SPEED_RJ45;
+  sfpSpeed  = sfpSpeed  || DEFAULT_SPEED_SFP;
   const ports = [];
   // RJ45 Ports (portNum 1-24, uid = portNum)
   for (let i = 1; i <= rj45Count; i++) {
     ports.push({
-      uid:         i,           // unique inner ID (used for DOM + state lookups)
-      id:          i,           // display number (P01 … P24)
+      uid:         i,
+      id:          i,
       type:        'rj45',
       label:       '',
       notes:       '',
       active:      false,
-      speed:       DEFAULT_SPEED_RJ45,
+      speed:       rj45Speed,
       mode:        'access',
       accessVlan:  1,
       taggedVlans: [],
@@ -109,13 +120,13 @@ function createDevice(name, type, rj45Count, sfpCount) {
   // SFP Ports (portNum 1-4, uid = 100+portNum → kein Konflikt mit RJ45)
   for (let i = 1; i <= sfpCount; i++) {
     ports.push({
-      uid:         100 + i,     // unique inner ID
-      id:          i,           // display number (S01 … S04)
+      uid:         100 + i,
+      id:          i,
       type:        'sfp',
       label:       '',
       notes:       '',
       active:      false,
-      speed:       DEFAULT_SPEED_SFP,
+      speed:       sfpSpeed,
       mode:        'access',
       accessVlan:  1,
       taggedVlans: [],

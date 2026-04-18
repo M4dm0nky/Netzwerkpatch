@@ -146,6 +146,24 @@
 .port-count-field input::-webkit-outer-spin-button,
 .port-count-field input::-webkit-inner-spin-button { -webkit-appearance: none; }
 .port-count-field input { -moz-appearance: textfield; }
+.port-count-select {
+  background: var(--app-bg);
+  border: 1px solid var(--rack-border);
+  color: var(--text-primary);
+  font-family: var(--font-header);
+  font-size: 24px;
+  text-align: center;
+  letter-spacing: 2px;
+  padding: 8px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.port-count-select:focus { border-color: var(--accent); }
+.port-count-select option { background: #0d1117; }
 
 /* Device Preview */
 #newDevicePreview {
