@@ -58,6 +58,7 @@ function loadProjectData(data) {
   });
 
   markSaved();
+  saveToLocalStorage();
   updateProjectDisplay();
   renderVlanPanel();
   renderAllDevices();
@@ -248,6 +249,7 @@ function clearAll() {
   state.devices = [];
   state.vlans   = [];
   fileHandle    = null;
+  localStorage.removeItem('netzwerkpatch_autosave');
   markModified();
   renderAllDevices();
   renderVlanPanel();

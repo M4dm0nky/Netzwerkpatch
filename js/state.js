@@ -28,6 +28,7 @@ function markModified() {
   state.modified = true;
   const el = document.getElementById('modifiedIndicator');
   if (el) el.classList.add('visible');
+  scheduleAutoSave();
 }
 
 function markSaved() {
@@ -110,19 +111,21 @@ function updateEmptyState() {
   }
 }
 
-// Auto-save (alle 90s in localStorage)
+// Auto-save (alle 30s in localStorage)
 let autoSaveTimer = null;
 function scheduleAutoSave() {
   clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(() => {
-    if (state.modified) saveToLocalStorage();
-  }, 90000);
+    if (state.modified) {
+      saveToLocalStorage();
+      showToast('Auto-gespeichert ✓', 'success', 1800);
+    }
+  }, 30000);
 }
 
 function saveToLocalStorage() {
   try {
     localStorage.setItem('netzwerkpatch_autosave', JSON.stringify(buildSaveData()));
-    console.log('Auto-Save in localStorage.');
   } catch(e) { /* ignore quota errors */ }
 }
 

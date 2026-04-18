@@ -6,13 +6,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const versionEl = document.getElementById('appVersionDisplay');
   if (versionEl) versionEl.textContent = APP_VERSION;
 
-  // Leeres Projekt → Empty State
-  updateEmptyState();
-  updateProjectDisplay();
-
-  // Auto-Save aus localStorage wiederherstellen (optional)
-  // const saved = localStorage.getItem('netzwerkpatch_autosave');
-  // if (saved) { try { loadProjectData(JSON.parse(saved)); } catch {} }
+  // Letztes Projekt aus localStorage laden
+  const saved = localStorage.getItem('netzwerkpatch_autosave');
+  if (saved) {
+    try {
+      loadProjectData(JSON.parse(saved));
+      showToast('Letztes Projekt geladen ✓', 'success');
+    } catch {
+      updateEmptyState();
+      updateProjectDisplay();
+    }
+  } else {
+    updateEmptyState();
+    updateProjectDisplay();
+  }
 
   console.log('NETZWERKPATCH', APP_VERSION, '— bereit.');
 });
