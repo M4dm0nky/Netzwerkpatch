@@ -1,0 +1,499 @@
+/* === Device Card (Rack Unit) === */
+.device-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  zoom: var(--rack-scale, 1);
+}
+
+.rack-unit {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  background: var(--rack-bg);
+  border: 1px solid var(--rack-border);
+  border-radius: 3px;
+  box-shadow:
+    0 4px 16px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.rack-ear {
+  width: 28px;
+  flex-shrink: 0;
+  background: var(--rack-ear);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-right: 1px solid var(--rack-border);
+}
+.rack-ear.right { border-right: none; border-left: 1px solid var(--rack-border); }
+
+.rack-screw {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #4a5070, #1c2030);
+  border: 1px solid #3a4060;
+  position: relative;
+}
+.rack-screw::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%) rotate(45deg);
+  width: 60%; height: 1px;
+  background: #0d0f14;
+}
+
+.rack-face {
+  flex: 1;
+  background: var(--rack-face);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.rack-hint {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+  opacity: 0.35;
+  text-align: right;
+  padding-right: 4px;
+  user-select: none;
+}
+
+.rack-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rack-border);
+}
+
+.device-name-label {
+  font-family: var(--font-header);
+  font-size: 18px;
+  letter-spacing: 3px;
+  color: var(--text-primary);
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.device-name-label:hover { color: var(--accent); }
+
+.device-name-input {
+  font-family: var(--font-header);
+  font-size: 18px;
+  letter-spacing: 3px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--accent);
+  color: var(--accent);
+  outline: none;
+  flex: 1;
+  min-width: 0;
+}
+
+.brand-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent-dim);
+  letter-spacing: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.rack-controls { display: flex; gap: 6px; flex-shrink: 0; }
+
+.rack-ctrl-btn {
+  background: var(--rack-ear);
+  border: 1px solid var(--rack-border);
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 3px 10px;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.rack-ctrl-btn:hover { background: var(--sidebar-hover); color: var(--accent); border-color: var(--accent); }
+.rack-ctrl-btn.delete:hover { background: rgba(232,74,74,0.15); color: var(--accent-red); border-color: var(--accent-red); }
+
+/* ===================================================================
+   PORTS GRID — Horizontale Port-Anordnung
+   =================================================================== */
+.ports-area {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.ports-rj45-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ports-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.ports-sfp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+  padding-left: 8px;
+  border-left: 1px solid var(--rack-border);
+}
+
+.ports-section-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--text-secondary);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+/* ===================================================================
+   RJ45 PORT — Trapezförmige Buchse mit 8 Kontaktstiften
+   =================================================================== */
+.rj45-port {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  transition: transform 0.1s;
+  position: relative;
+  width: 52px;
+  padding: 3px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+}
+.rj45-port:hover {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,0.03);
+}
+.rj45-port.drag-over {
+  border-color: var(--accent-green);
+  background: rgba(74,232,160,0.06);
+  box-shadow: 0 0 10px rgba(74,232,160,0.3);
+}
+
+/* Port VLAN Farbkodierung am Rand */
+.rj45-port.vlan-assigned {
+  border-color: var(--port-vlan-color, var(--rack-border));
+  box-shadow: 0 0 6px var(--port-vlan-glow, transparent);
+}
+.rj45-port.vlan-trunk {
+  border-style: dashed;
+  border-color: var(--port-vlan-color, var(--rack-border));
+}
+
+/* Status-LED (oben rechts über der Buchse) */
+.port-status-led {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #083018, #020e08 60%, #020604);
+  border: 1px solid #1c1c24;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
+  transition: background 0.3s, box-shadow 0.3s;
+  flex-shrink: 0;
+}
+.port-status-led::before {
+  content: '';
+  position: absolute;
+  top: 1px; left: 1px;
+  width: 3px; height: 2px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 100%);
+}
+.port-status-led.active {
+  background: radial-gradient(circle at 40% 35%,
+    #e0fff0 0%, #80ffcc 22%, var(--led-on) 58%, #042018 100%);
+  border-color: #0a3020;
+  box-shadow:
+    0 0 5px var(--led-glow),
+    0 0 10px rgba(74,232,160,0.22);
+  animation: lampGlow 2.8s ease-in-out infinite;
+}
+
+/* RJ45 Buchsen-Gehäuse */
+.rj45-housing {
+  width: 28px;
+  height: 24px;
+  background: linear-gradient(160deg, #aaaaaa 0%, #777777 55%, #444444 100%);
+  border: 1.5px solid #999;
+  border-radius: 2px 2px 3px 3px;
+  position: relative;
+  box-shadow:
+    0 2px 5px rgba(0,0,0,0.6),
+    inset 0 1px 2px rgba(255,255,255,0.3);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 3px;
+}
+
+/* Trapezförmige RJ45-Öffnung */
+.rj45-opening {
+  width: 22px;
+  height: 16px;
+  background: var(--rj45-inner);
+  clip-path: polygon(8% 0%, 92% 0%, 98% 100%, 2% 100%);
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 2px;
+}
+
+/* 8 Kontaktstifte (Goldfarben, sichtbar in der Öffnung) */
+.rj45-pins {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+}
+.rj45-pin {
+  width: 2px;
+  height: 6px;
+  background: linear-gradient(180deg, #ffdd88 0%, #cc9900 100%);
+  border-radius: 0.5px;
+  box-shadow: 0 0 2px rgba(255,200,0,0.4);
+}
+
+/* 7-Segment Anzeige für Portnummer */
+.port-seg-display {
+  transform: scale(0.75);
+  transform-origin: top center;
+  margin-top: -4px;
+  margin-bottom: -4px;
+}
+
+/* Port-Label (beschreibender Text unter dem Port) */
+.port-label-text {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 50px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+  line-height: 1;
+}
+.port-label-text.has-label { color: var(--text-mono); }
+
+/* VLAN Badge */
+.vlan-badge-wrap {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  justify-content: center;
+  min-height: 14px;
+}
+
+.vlan-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 14px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  color: #000;
+  padding: 0 3px;
+  letter-spacing: 0.3px;
+  border: 1px solid rgba(0,0,0,0.2);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+
+.vlan-badge-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 14px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--text-secondary);
+  padding: 0 3px;
+  border: 1px solid var(--rack-border);
+}
+
+/* ===================================================================
+   SFP PORT — Schmaler Fiber-Slot
+   =================================================================== */
+.sfp-port {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  transition: transform 0.1s;
+  position: relative;
+  width: 40px;
+  padding: 3px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+}
+.sfp-port:hover {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,0.03);
+}
+.sfp-port.drag-over {
+  border-color: var(--accent-green);
+  background: rgba(74,232,160,0.06);
+  box-shadow: 0 0 10px rgba(74,232,160,0.3);
+}
+.sfp-port.vlan-assigned {
+  border-color: var(--port-vlan-color, var(--rack-border));
+  box-shadow: 0 0 6px var(--port-vlan-glow, transparent);
+}
+.sfp-port.vlan-trunk {
+  border-style: dashed;
+  border-color: var(--port-vlan-color, var(--rack-border));
+}
+
+/* SFP Slot-Gehäuse */
+.sfp-housing {
+  width: 20px;
+  height: 26px;
+  background: linear-gradient(160deg, #888888 0%, #555555 55%, #333333 100%);
+  border: 1.5px solid #777;
+  border-radius: 2px;
+  position: relative;
+  box-shadow:
+    0 2px 5px rgba(0,0,0,0.6),
+    inset 0 1px 2px rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Slot-Öffnung */
+.sfp-slot {
+  width: 14px;
+  height: 20px;
+  background: radial-gradient(ellipse at 50% 30%, #1a1a2e, #070710);
+  border-radius: 1px;
+  border: 1px solid #1a1a2e;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* SFP-Symbol (kleines Faserkreuz) */
+.sfp-symbol {
+  width: 8px;
+  height: 8px;
+  position: relative;
+  opacity: 0.6;
+}
+.sfp-symbol::before {
+  content: '';
+  position: absolute;
+  top: 3px; left: 0;
+  width: 8px; height: 2px;
+  background: #4a90e8;
+  border-radius: 1px;
+}
+.sfp-symbol::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 3px;
+  width: 2px; height: 8px;
+  background: #4a90e8;
+  border-radius: 1px;
+}
+
+/* SFP Typtext */
+.sfp-type-label {
+  font-family: var(--font-mono);
+  font-size: 6px;
+  color: var(--accent-dim);
+  letter-spacing: 0.5px;
+  text-align: center;
+  opacity: 0.7;
+}
+
+/* ===================================================================
+   Retro Indicator Lamp — exakt wie Boosterpatch
+   =================================================================== */
+@keyframes lampGlow {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+.retro-lamp {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+  border: 2px solid #1c1c24;
+  background: radial-gradient(circle at 40% 35%, #2a1a0a, #0e0a06 60%, #080608);
+  box-shadow:
+    inset 0 1px 3px rgba(255,255,255,0.07),
+    inset 0 -1px 3px rgba(0,0,0,0.55),
+    0 2px 4px rgba(0,0,0,0.85);
+  transition: background 0.28s, box-shadow 0.28s, border-color 0.28s;
+}
+.retro-lamp::before {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 6px; height: 4px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+.retro-lamp.lamp-green {
+  background: radial-gradient(circle at 40% 35%, #0a3a1e, #041c0e 55%, #020a06);
+  border-color: #082a14;
+}
+.retro-lamp.lamp-green.on {
+  background: radial-gradient(circle at 40% 35%,
+    #e0fff0 0%, #80ffcc 22%, var(--led-on) 58%, #042018 100%);
+  border-color: #0a3020;
+  box-shadow:
+    0 0 9px var(--led-glow),
+    0 0 20px rgba(74,232,160,0.28),
+    inset 0 1px 3px rgba(150,255,200,0.22),
+    inset 0 -1px 3px rgba(0,0,0,0.3),
+    0 2px 4px rgba(0,0,0,0.7);
+  animation: lampGlow 2.8s ease-in-out infinite;
+}

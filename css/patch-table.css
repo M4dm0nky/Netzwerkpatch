@@ -1,0 +1,133 @@
+/* === SCHEMATISCH Tabelle === */
+#tabDetails {
+  overflow: auto;
+}
+
+.patch-table-wrap {
+  overflow: auto;
+  flex: 1;
+  padding: 16px 20px;
+}
+
+#patchTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+
+#patchTable th {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: var(--rack-bg);
+  border-bottom: 2px solid var(--rack-border);
+  padding: 8px 12px;
+  text-align: left;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+#patchTable td {
+  border-bottom: 1px solid rgba(42,48,80,0.5);
+  padding: 7px 12px;
+  vertical-align: middle;
+}
+
+#patchTable tr:hover td { background: rgba(255,255,255,0.02); }
+#patchTable tr.odd td { background: rgba(255,255,255,0.01); }
+
+/* Spalten */
+.pt-device {
+  font-family: var(--font-header);
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  white-space: nowrap;
+  vertical-align: top;
+  padding-top: 10px;
+  border-right: 1px solid var(--rack-border);
+  min-width: 140px;
+}
+
+.pt-port {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  width: 50px;
+}
+
+.pt-type {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  width: 46px;
+}
+
+.pt-label {
+  font-weight: 600;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pt-mode {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  width: 70px;
+}
+
+.pt-access-vlan,
+.pt-tagged {
+  /* td — kein flex, inline-flex Badges fließen nebeneinander */
+  line-height: 1.6;
+}
+
+.pt-vlan-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 16px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 4px;
+  border: 1px solid rgba(0,0,0,0.2);
+}
+
+.pt-speed {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  width: 60px;
+}
+
+.pt-notes {
+  font-size: 12px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Leer-Hinweis */
+#patchTableEmpty {
+  padding: 40px 20px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: center;
+  letter-spacing: 1px;
+}

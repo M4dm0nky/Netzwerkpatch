@@ -1,0 +1,251 @@
+/* === Modal System === */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal-box {
+  background: var(--sidebar-bg);
+  border: 1px solid var(--rack-border);
+  width: 480px;
+  max-width: 95vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+  animation: modalIn 0.2s ease;
+}
+
+@keyframes modalIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  background: var(--rack-bg);
+  border-bottom: 1px solid var(--rack-border);
+}
+
+.modal-title {
+  font-family: var(--font-header);
+  font-size: 22px;
+  letter-spacing: 3px;
+  color: var(--accent);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 4px;
+  transition: color 0.15s;
+}
+.modal-close:hover { color: var(--accent-red); }
+
+.modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.modal-field { display: flex; flex-direction: column; gap: 6px; }
+
+.modal-field label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.modal-field input[type="text"],
+.modal-field input[type="date"],
+.modal-field input[type="number"],
+.modal-field input[type="color"],
+.modal-field textarea,
+.modal-field select {
+  background: var(--app-bg);
+  border: 1px solid var(--rack-border);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 17px;
+  font-weight: 600;
+  padding: 9px 12px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s, background 0.15s;
+  letter-spacing: .5px;
+}
+.modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus {
+  border-color: var(--accent);
+  background: rgba(232,200,74,.04);
+}
+.modal-field select option { background: var(--rack-bg); }
+.modal-field input[type="color"] {
+  height: 44px;
+  padding: 4px;
+  cursor: pointer;
+}
+.modal-field textarea {
+  resize: vertical;
+  min-height: 70px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.modal-field .input-error {
+  color: var(--accent-red);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  display: none;
+}
+.modal-field.has-error input { border-color: var(--accent-red); }
+.modal-field.has-error .input-error { display: block; }
+
+/* Port-Count Inputs (nummerisch, breiter) */
+.port-count-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.port-count-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+.port-count-field label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+.port-count-field input[type="number"] {
+  background: var(--app-bg);
+  border: 1px solid var(--rack-border);
+  color: var(--text-primary);
+  font-family: var(--font-header);
+  font-size: 32px;
+  text-align: center;
+  letter-spacing: 4px;
+  padding: 8px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+.port-count-field input[type="number"]:focus { border-color: var(--accent); }
+.port-count-field input::-webkit-outer-spin-button,
+.port-count-field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.port-count-field input { -moz-appearance: textfield; }
+
+/* Device Preview */
+#newDevicePreview {
+  background: var(--app-bg);
+  border: 1px solid var(--rack-border);
+  padding: 12px;
+  min-height: 64px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--rack-border);
+  background: var(--rack-bg);
+}
+
+.btn-cancel {
+  background: transparent;
+  border: 1px solid var(--rack-border);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 8px 20px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.15s;
+}
+.btn-cancel:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+
+.btn-primary {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: #0d0f14;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 8px 24px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: #ffd84a; border-color: #ffd84a; }
+
+/* Color Picker Row (für VLAN Modal) */
+.color-picker-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.color-preview-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 3px;
+  border: 1px solid var(--rack-border);
+  flex-shrink: 0;
+}
+
+/* Vorschlag-Farben für schnelle VLAN-Auswahl */
+.color-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.color-preset-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.1s, transform 0.1s;
+}
+.color-preset-dot:hover {
+  border-color: rgba(255,255,255,0.5);
+  transform: scale(1.15);
+}
+.color-preset-dot.selected {
+  border-color: #fff;
+}
+
+/* Multi-Select für Tagged VLANs */
+.tagged-vlan-select {
+  background: var(--app-bg);
+  border: 1px solid var(--rack-border);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 4px;
+  outline: none;
+  width: 100%;
+  min-height: 90px;
+  transition: border-color 0.15s;
+}
+.tagged-vlan-select:focus { border-color: var(--accent); }
+.tagged-vlan-select option { padding: 4px 8px; background: var(--rack-bg); }
+.tagged-vlan-select option:checked { background: rgba(232,200,74,0.15); }

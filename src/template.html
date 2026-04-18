@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NETZWERKPATCH</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <!-- BUILD:CSS -->
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header id="app-header">
+  <div class="hdr-left"></div>
+  <div class="hdr-center">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div>
+        <h1 class="app-title">NETZWERK<span>PATCH</span></h1>
+        <div class="app-version" id="appVersionDisplay">v0.1.0</div>
+      </div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="hdr-project-info">
+      <div id="projectNameDisplay" ondblclick="openProjectNameModal()" title="Doppelklick zum Umbenennen">Kein Projekt</div>
+      <div id="modifiedIndicator">● UNGESPEICHERT</div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== SIDEBAR ===== -->
+<nav id="sidebar">
+  <div class="sb-section-title">PROJEKT</div>
+  <button class="sb-btn green" onclick="newProject()"><span style="font-size:8px;font-weight:700;background:var(--accent-green);color:#000;padding:1px 4px;border-radius:2px;margin-right:2px;">NEW</span> Neues Projekt</button>
+  <div class="sb-sep"></div>
+
+  <div class="sb-section-title">NETZWERKGERÄTE</div>
+  <button class="sb-btn green" onclick="openNetworkDeviceModal()">⊕ Gerät anlegen</button>
+  <div class="sb-sep"></div>
+
+  <div class="sb-section-title">VLANS</div>
+  <button class="sb-btn green" onclick="openNewVlanModal()">⊕ Neue VLAN</button>
+  <div class="sb-sep"></div>
+
+  <div class="sb-section-title">WERKZEUGE</div>
+  <button class="sb-btn primary" onclick="saveProjectDialog()">💾 Speichern</button>
+  <button class="sb-btn" onclick="triggerLoad()">📂 Öffnen</button>
+  <button class="sb-btn" onclick="saveProjectAs()">↓ Speichern als …</button>
+  <button class="sb-btn" onclick="exportPrint()">🖨 Drucken</button>
+  <button class="sb-btn danger" onclick="clearAll()">✕ Leeren</button>
+</nav>
+
+<!-- Hidden file inputs -->
+<input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleFileLoad(event)">
+
+<!-- ===== MODAL: Speichern ===== -->
+<div class="modal-overlay" id="saveModal">
+  <div class="modal-box" style="width:400px;">
+    <div class="modal-header">
+      <div class="modal-title">SPEICHERN</div>
+      <button class="modal-close" onclick="closeModal('saveModal')">✕</button>
+    </div>
+    <div class="modal-body" id="saveModalBody"></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Neues Gerät ===== -->
+<div class="modal-overlay" id="newDeviceModal">
+  <div class="modal-box" style="width:520px;">
+    <div class="modal-header">
+      <div class="modal-title">NEUES NETZWERKGERÄT</div>
+      <button class="modal-close" onclick="closeModal('newDeviceModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field" id="newDeviceNameField">
+        <label>Gerätename <span style="color:var(--accent-red)">*</span></label>
+        <input type="text" id="newDeviceName" placeholder="z.B. Core Switch" maxlength="50" oninput="document.getElementById('newDeviceNameField').classList.remove('has-error')">
+        <div class="input-error">Bitte einen Gerätenamen eingeben.</div>
+      </div>
+      <div class="modal-field">
+        <label>Gerätetyp</label>
+        <select id="newDeviceType">
+          <option value="managed-switch">Managed Switch</option>
+          <option value="poe-switch">PoE Switch</option>
+          <option value="gigabit-switch">Gigabit Switch</option>
+          <option value="unmanaged-switch">Unmanaged Switch</option>
+        </select>
+      </div>
+      <div class="port-count-row">
+        <div class="port-count-field">
+          <label>RJ45 Ports (0–24)</label>
+          <input type="number" id="newDeviceRJ45" value="24" min="0" max="24" oninput="updateDevicePreview()">
+        </div>
+        <div class="port-count-field">
+          <label>SFP Ports (0–4)</label>
+          <input type="number" id="newDeviceSFP" value="0" min="0" max="4" oninput="updateDevicePreview()">
+        </div>
+      </div>
+      <div class="modal-field">
+        <label>Vorschau</label>
+        <div id="newDevicePreview"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('newDeviceModal')">Abbrechen</button>
+      <button class="btn-primary" onclick="confirmNewDevice()">Gerät anlegen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Projektname ===== -->
+<div class="modal-overlay" id="projectModal">
+  <div class="modal-box" style="width:380px;">
+    <div class="modal-header">
+      <div class="modal-title">PROJEKTNAME</div>
+      <button class="modal-close" onclick="closeModal('projectModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label>Projektname</label>
+        <input type="text" id="projectNameInput" placeholder="z.B. Büronetzwerk 2026" maxlength="60">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('projectModal')">Abbrechen</button>
+      <button class="btn-primary" onclick="confirmProjectName()">Übernehmen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Neues Projekt ===== -->
+<div class="modal-overlay" id="newProjectModal">
+  <div class="modal-box" style="width:460px;">
+    <div class="modal-header">
+      <div class="modal-title">NEUES PROJEKT</div>
+      <button class="modal-close" onclick="closeModal('newProjectModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field" id="npNameField">
+        <label>Projektname <span style="color:var(--accent-red)">*</span></label>
+        <input type="text" id="newProjectNameInput" placeholder="z.B. Büronetzwerk 2026" maxlength="60">
+        <div class="input-error">Bitte einen Projektnamen eingeben.</div>
+      </div>
+      <p style="font-size:11px;color:var(--text-secondary);font-family:var(--font-mono);line-height:1.6;">
+        Der Projektname wird beim Speichern als Dateiname verwendet.<br>
+        Im nächsten Schritt kannst du Switches anlegen.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('newProjectModal')">Abbrechen</button>
+      <button class="btn-primary" onclick="confirmNewProject()">Weiter →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: VLAN ===== -->
+<div class="modal-overlay" id="vlanModal">
+  <div class="modal-box" style="width:440px;">
+    <div class="modal-header">
+      <div class="modal-title" id="vlanModalTitle">NEUE VLAN</div>
+      <button class="modal-close" onclick="closeModal('vlanModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field" id="vlanIdField">
+        <label>VLAN ID (1–4094)</label>
+        <input type="number" id="vlanIdInput" min="1" max="4094" placeholder="z.B. 10">
+        <div class="input-error">Ungültige oder bereits vorhandene VLAN-ID.</div>
+      </div>
+      <div class="modal-field" id="vlanNameField">
+        <label>VLAN Name <span style="color:var(--accent-red)">*</span></label>
+        <input type="text" id="vlanNameInput" placeholder="z.B. Office" maxlength="30">
+        <div class="input-error">Bitte einen Namen eingeben.</div>
+      </div>
+      <div class="modal-field">
+        <label>Farbe</label>
+        <div class="color-picker-row">
+          <input type="color" id="vlanColorInput" value="#4a90e8" oninput="updateColorPreview(this.value)">
+          <div class="color-preview-box" id="vlanColorPreview" style="background:#4a90e8;"></div>
+        </div>
+        <div class="color-presets" id="vlanColorPresets"></div>
+      </div>
+      <div class="modal-field">
+        <label>Beschreibung (optional)</label>
+        <textarea id="vlanDescInput" placeholder="z.B. Büro-Netzwerk, Server-Segment …"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('vlanModal')">Abbrechen</button>
+      <button class="btn-primary" onclick="confirmVlan()">Übernehmen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN ===== -->
+<main id="main">
+
+  <!-- Empty State -->
+  <div id="emptyState">
+    <div class="empty-icon">⬡</div>
+    <h2>NETZWERKPATCH</h2>
+    <p>Neues Projekt starten oder vorhandenes laden.</p>
+    <div class="empty-actions">
+      <button class="btn-primary btn-large" onclick="newProject()">⊕ Neues Projekt</button>
+      <button class="btn-secondary btn-large" onclick="triggerLoad()">📂 Projekt laden</button>
+    </div>
+  </div>
+
+  <!-- App Tabs (sichtbar wenn Projekt vorhanden) -->
+  <div id="appTabs">
+    <div id="tabBar">
+      <button class="tab-btn active" id="tabBtnPatch" onclick="switchTab('patch')">PATCH-ANSICHT</button>
+      <button class="tab-btn" id="tabBtnDetails" onclick="switchTab('details')">SCHEMATISCH</button>
+      <button class="tab-btn" id="tabBtnVlans" onclick="switchTab('vlans')">VLANS</button>
+    </div>
+
+    <!-- Tab: Patch View -->
+    <div id="tabPatch" class="tab-content active">
+      <div id="patchView">
+        <!-- VLAN Sidebar Panel -->
+        <div id="vlanPanel">
+          <!-- populated by renderVlanPanel() -->
+        </div>
+        <!-- Devices -->
+        <div id="devicesContainer"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Schematisch -->
+    <div id="tabDetails" class="tab-content">
+      <div class="section-header">
+        <div class="section-title">SCHEMATISCH</div>
+      </div>
+      <div class="patch-table-wrap">
+        <table id="patchTable">
+          <thead>
+            <tr>
+              <th>Gerät</th>
+              <th>Port</th>
+              <th>Typ</th>
+              <th>Label</th>
+              <th>Modus</th>
+              <th>Access / Native VLAN</th>
+              <th>Tagged VLANs</th>
+              <th>Speed</th>
+              <th>Notizen</th>
+            </tr>
+          </thead>
+          <tbody id="patchTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab: VLAN Manager -->
+    <div id="tabVlans" class="tab-content">
+      <div class="vlan-manager-header">
+        <div class="section-title">VLAN VERWALTUNG</div>
+        <button class="btn-primary" style="font-size:12px;padding:6px 16px;" onclick="openNewVlanModal()">⊕ Neue VLAN</button>
+      </div>
+      <div id="vlanManagerContent"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div id="toastContainer"></div>
+
+<!-- BUILD:JS -->
+
+</body>
+</html>

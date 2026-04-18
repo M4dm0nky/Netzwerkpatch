@@ -1,0 +1,3855 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NETZWERKPATCH</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+    /* ===== css/variables.css ===== */
+/* === 0. Global Scale === */
+html { zoom: 1.2; }
+
+/* === 1. Reset & Variables === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --font-header:  'Bebas Neue', sans-serif;
+  --font-ui:      'Barlow Condensed', sans-serif;
+  --font-mono:    'Share Tech Mono', monospace;
+
+  /* App Shell */
+  --app-bg:        #0d0f14;
+  --sidebar-bg:    #141720;
+  --sidebar-hover: rgba(232,200,74,.06);
+  --sidebar-active:rgba(232,200,74,.14);
+  --header-bg:     #0a0c14;
+  --header-border: #e8c84a;
+  --header-text:   #c8d0e8;
+
+  /* Accent */
+  --accent:        #e8c84a;
+  --accent-dim:    #c8a832;
+  --accent-green:  #4ae8a0;
+  --accent-red:    #e84a4a;
+  --accent-orange: #e8a04a;
+
+  /* Rack Device */
+  --rack-bg:       #1c2030;
+  --rack-face:     #141720;
+  --rack-border:   #2a3050;
+  --rack-ear:      #1c2030;
+  --rack-screw:    #3a4060;
+  --rack-stripe:   #1a1f30;
+
+  /* RJ45 Ports */
+  --rj45-body:     #888888;
+  --rj45-ring:     #AAAAAA;
+  --rj45-inner:    #0d0f14;
+  --rj45-pin:      #cccccc;
+
+  /* SFP Ports */
+  --sfp-body:      #666666;
+  --sfp-inner:     #0a0c14;
+
+  /* LED */
+  --led-on:        #4ae8a0;
+  --led-glow:      rgba(74,232,160,0.5);
+  --led-off:       #0d2018;
+  --led-off-ring:  #1a3028;
+
+  /* Retro Lamps */
+  --lamp-in1:       #e8a04a;
+  --lamp-in1-glow:  rgba(232,160,74,0.7);
+  --lamp-in2:       #4a90e8;
+  --lamp-in2-glow:  rgba(74,144,232,0.7);
+  --lamp-off-cap:   #1a1a22;
+  --lamp-filament:  rgba(255,240,180,0.92);
+
+  /* Text */
+  --text-primary:  #c8d0e8;
+  --text-secondary:#5a6080;
+  --text-mono:     #e8c84a;
+  --text-label:    #8a94b0;
+
+  /* Sidebar width */
+  --sidebar-w:     200px;
+  --header-h:      64px;
+
+  /* 7-Segment — VFD/Nixie Röhren-Stil */
+  --seg-on:        #ffb200;
+  --seg-on-glow:   rgba(255,178,0,0.95);
+  --seg-off:       rgba(35,12,0,0.22);
+
+  /* VLAN Farb-Palette (16 distinkte Farben) */
+  --vlan-c1:  #4a90e8;   /* blau        */
+  --vlan-c2:  #4ae8a0;   /* grün        */
+  --vlan-c3:  #e8a04a;   /* orange      */
+  --vlan-c4:  #e84a9f;   /* magenta     */
+  --vlan-c5:  #a04ae8;   /* lila        */
+  --vlan-c6:  #e8e84a;   /* gelb        */
+  --vlan-c7:  #4ae8e8;   /* cyan        */
+  --vlan-c8:  #e84a4a;   /* rot         */
+  --vlan-c9:  #4a6ee8;   /* indigo      */
+  --vlan-c10: #88e84a;   /* hellgrün    */
+  --vlan-c11: #e8604a;   /* koralle     */
+  --vlan-c12: #c84ae8;   /* violett     */
+  --vlan-c13: #4ae8c8;   /* türkis      */
+  --vlan-c14: #e8b44a;   /* bernstein   */
+  --vlan-c15: #8ae84a;   /* limette     */
+  --vlan-c16: #e84a74;   /* rosa-rot    */
+}
+
+    /* ===== css/layout.css ===== */
+/* === 2. Layout Shell === */
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  display: grid;
+  grid-template-rows: var(--header-h) 1fr;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-areas:
+    "header header"
+    "sidebar main";
+  background: var(--app-bg);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 16px;
+}
+
+/* scrollbars */
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: var(--app-bg); }
+*::-webkit-scrollbar-thumb { background: var(--rack-border); border-radius: 3px; }
+
+/* === 3. Header === */
+#app-header {
+  grid-area: header;
+  background: linear-gradient(135deg, #0a0c14 0%, #12182e 50%, #0a0c14 100%);
+  border-bottom: 2px solid var(--header-border);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.hdr-left  { display: flex; align-items: center; justify-content: flex-start; gap: 8px; }
+.hdr-center { display: flex; align-items: center; justify-content: center; padding: 0 16px; }
+.hdr-right { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+
+.hdr-project-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.app-title {
+  font-family: var(--font-header);
+  font-size: 2.2rem;
+  color: #fff;
+  letter-spacing: 4px;
+  line-height: 1;
+}
+.app-title span { color: var(--accent); }
+
+.app-version {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 2px;
+  margin-top: 3px;
+  text-align: center;
+}
+
+#projectNameDisplay {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--accent);
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+#modifiedIndicator {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent-red);
+  letter-spacing: 1px;
+  visibility: hidden;
+}
+#modifiedIndicator.visible { visibility: visible; }
+
+/* === 4. Sidebar === */
+#sidebar {
+  grid-area: sidebar;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--rack-border);
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sb-section-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  padding: 4px 14px 6px;
+  margin-top: 4px;
+}
+
+.sb-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-align: left;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  border-left: 2px solid transparent;
+  width: 100%;
+}
+.sb-btn:hover {
+  background: var(--sidebar-hover);
+  color: var(--accent);
+  border-left-color: var(--accent);
+}
+.sb-btn.primary {
+  color: var(--accent);
+  font-weight: 700;
+}
+.sb-btn.primary:hover {
+  background: rgba(232,200,74,0.1);
+  border-left-color: var(--accent);
+}
+.sb-btn.green { color: var(--accent-green); }
+.sb-btn.green:hover {
+  background: rgba(74,232,160,0.08);
+  color: var(--accent-green);
+  border-left-color: var(--accent-green);
+}
+.sb-btn.danger:hover {
+  background: rgba(232,74,74,0.1);
+  color: var(--accent-red);
+  border-left-color: var(--accent-red);
+}
+
+.sb-sep { height: 1px; background: var(--rack-border); margin: 8px 10px; }
+
+/* Save dialog options */
+.save-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  border: 1px solid var(--rack-border);
+  margin-bottom: 8px;
+  background: var(--rack-bg);
+  transition: border-color 0.15s, background 0.15s;
+}
+.save-option:hover {
+  border-color: var(--accent);
+  background: rgba(232,200,74,0.04);
+}
+.save-option-icon { font-size: 1.4rem; flex-shrink: 0; line-height: 1.2; }
+.save-option-text strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+.save-option-text span {
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  font-family: var(--font-mono);
+}
+
+/* === 5. Main Content Area === */
+#main {
+  grid-area: main;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* empty state */
+#emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex: 1;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+#emptyState .empty-icon { font-size: 64px; opacity: 0.2; }
+#emptyState h2 { font-family: var(--font-header); font-size: 42px; letter-spacing: 6px; color: var(--text-primary); }
+#emptyState p { font-size: 15px; font-weight: 400; max-width: 300px; line-height: 1.5; }
+.empty-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 12px 32px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.15s;
+}
+.btn-secondary:hover { background: rgba(232,200,74,0.1); }
+.btn-large { font-size: 16px !important; padding: 14px 40px !important; letter-spacing: 2px; }
+
+/* === 6. Tab System === */
+#appTabs {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+#appTabs.visible { display: flex; }
+
+#tabBar {
+  flex-shrink: 0;
+  display: flex;
+  gap: 0;
+  background: var(--app-bg);
+  border-bottom: 2px solid var(--rack-border);
+  padding: 0 16px;
+}
+
+.tab-btn {
+  font-family: var(--font-header);
+  font-size: 15px;
+  letter-spacing: 2px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  text-transform: uppercase;
+}
+.tab-btn:hover { color: var(--text-primary); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.tab-content {
+  display: none;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+.tab-content.active { display: flex; flex-direction: column; }
+
+/* === 7. Patch View (VLAN Panel + Devices) === */
+#patchView {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+#vlanPanel {
+  width: 160px;
+  flex-shrink: 0;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--rack-border);
+  overflow-y: auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.vlan-panel-header {
+  font-family: var(--font-header);
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: var(--accent);
+  padding: 12px 12px 8px;
+  border-bottom: 1px solid var(--rack-border);
+  flex-shrink: 0;
+}
+
+.vlan-panel-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px 6px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent-green);
+  letter-spacing: 1px;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  border-left: 2px solid transparent;
+  transition: background 0.12s, border-color 0.12s;
+}
+.vlan-panel-add:hover {
+  background: rgba(74,232,160,0.08);
+  border-left-color: var(--accent-green);
+}
+
+.vlan-panel-sep {
+  height: 1px;
+  background: var(--rack-border);
+  margin: 4px 8px;
+  flex-shrink: 0;
+}
+
+.vlan-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 6px 12px;
+  cursor: grab;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+  border-left: 2px solid transparent;
+  transition: background 0.12s, border-color 0.12s;
+  user-select: none;
+}
+.vlan-entry:hover {
+  background: var(--sidebar-hover);
+  border-left-color: var(--accent);
+  color: var(--accent);
+}
+.vlan-entry:active { cursor: grabbing; }
+
+.vlan-entry-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.vlan-entry-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vlan-entry-id {
+  font-size: 9px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+/* === 8. Devices Container === */
+#devicesContainer {
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  padding: 20px 16px;
+}
+
+/* === 9. Section Header (für Tabs) === */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px 10px;
+  border-bottom: 1px solid var(--rack-border);
+  flex-shrink: 0;
+}
+
+.section-title {
+  font-family: var(--font-header);
+  font-size: 18px;
+  letter-spacing: 3px;
+  color: var(--accent);
+}
+
+.section-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  background: var(--rack-bg);
+  border: 1px solid var(--rack-border);
+  padding: 2px 8px;
+  letter-spacing: 1px;
+}
+
+    /* ===== css/rack.css ===== */
+/* === Device Card (Rack Unit) === */
+.device-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  zoom: var(--rack-scale, 1);
+}
+
+.rack-unit {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  background: var(--rack-bg);
+  border: 1px solid var(--rack-border);
+  border-radius: 3px;
+  box-shadow:
+    0 4px 16px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.rack-ear {
+  width: 28px;
+  flex-shrink: 0;
+  background: var(--rack-ear);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-right: 1px solid var(--rack-border);
+}
+.rack-ear.right { border-right: none; border-left: 1px solid var(--rack-border); }
+
+.rack-screw {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #4a5070, #1c2030);
+  border: 1px solid #3a4060;
+  position: relative;
+}
+.rack-screw::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%) rotate(45deg);
+  width: 60%; height: 1px;
+  background: #0d0f14;
+}
+
+.rack-face {
+  flex: 1;
+  background: var(--rack-face);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.rack-hint {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+  opacity: 0.35;
+  text-align: right;
+  padding-right: 4px;
+  user-select: none;
+}
+
+.rack-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rack-border);
+}
+
+.device-name-label {
+  font-family: var(--font-header);
+  font-size: 18px;
+  letter-spacing: 3px;
+  color: var(--text-primary);
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.device-name-label:hover { color: var(--accent); }
+
+.device-name-input {
+  font-family: var(--font-header);
+  font-size: 18px;
+  letter-spacing: 3px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--accent);
+  color: var(--accent);
+  outline: none;
+  flex: 1;
+  min-width: 0;
+}
+
+.brand-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent-dim);
+  letter-spacing: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.rack-controls { display: flex; gap: 6px; flex-shrink: 0; }
+
+.rack-ctrl-btn {
+  background: var(--rack-ear);
+  border: 1px solid var(--rack-border);
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 3px 10px;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.rack-ctrl-btn:hover { background: var(--sidebar-hover); color: var(--accent); border-color: var(--accent); }
+.rack-ctrl-btn.delete:hover { background: rgba(232,74,74,0.15); color: var(--accent-red); border-color: var(--accent-red); }
+
+/* ===================================================================
+   PORTS GRID — Horizontale Port-Anordnung
+   =================================================================== */
+.ports-area {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.ports-rj45-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ports-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.ports-sfp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+  padding-left: 8px;
+  border-left: 1px solid var(--rack-border);
+}
+
+.ports-section-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--text-secondary);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+/* ===================================================================
+   RJ45 PORT — Trapezförmige Buchse mit 8 Kontaktstiften
+   =================================================================== */
+.rj45-port {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  transition: transform 0.1s;
+  position: relative;
+  width: 52px;
+  padding: 3px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+}
+.rj45-port:hover {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,0.03);
+}
+.rj45-port.drag-over {
+  border-color: var(--accent-green);
+  background: rgba(74,232,160,0.06);
+  box-shadow: 0 0 10px rgba(74,232,160,0.3);
+}
+
+/* Port VLAN Farbkodierung am Rand */
+.rj45-port.vlan-assigned {
+  border-color: var(--port-vlan-color, var(--rack-border));
+  box-shadow: 0 0 6px var(--port-vlan-glow, transparent);
+}
+.rj45-port.vlan-trunk {
+  border-style: dashed;
+  border-color: var(--port-vlan-color, var(--rack-border));
+}
+
+/* Status-LED (oben rechts über der Buchse) */
+.port-status-led {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #083018, #020e08 60%, #020604);
+  border: 1px solid #1c1c24;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
+  transition: background 0.3s, box-shadow 0.3s;
+  flex-shrink: 0;
+}
+.port-status-led::before {
+  content: '';
+  position: absolute;
+  top: 1px; left: 1px;
+  width: 3px; height: 2px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 100%);
+}
+.port-status-led.active {
+  background: radial-gradient(circle at 40% 35%,
+    #e0fff0 0%, #80ffcc 22%, var(--led-on) 58%, #042018 100%);
+  border-color: #0a3020;
+  box-shadow:
+    0 0 5px var(--led-glow),
+    0 0 10px rgba(74,232,160,0.22);
+  animation: lampGlow 2.8s ease-in-out infinite;
+}
+
+/* RJ45 Buchsen-Gehäuse */
+.rj45-housing {
+  width: 28px;
+  height: 24px;
+  background: linear-gradient(160deg, #aaaaaa 0%, #777777 55%, #444444 100%);
+  border: 1.5px solid #999;
+  border-radius: 2px 2px 3px 3px;
+  position: relative;
+  box-shadow:
+    0 2px 5px rgba(0,0,0,0.6),
+    inset 0 1px 2px rgba(255,255,255,0.3);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 3px;
+}
+
+/* Trapezförmige RJ45-Öffnung */
+.rj45-opening {
+  width: 22px;
+  height: 16px;
+  background: var(--rj45-inner);
+  clip-path: polygon(8% 0%, 92% 0%, 98% 100%, 2% 100%);
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 2px;
+}
+
+/* 8 Kontaktstifte (Goldfarben, sichtbar in der Öffnung) */
+.rj45-pins {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+}
+.rj45-pin {
+  width: 2px;
+  height: 6px;
+  background: linear-gradient(180deg, #ffdd88 0%, #cc9900 100%);
+  border-radius: 0.5px;
+  box-shadow: 0 0 2px rgba(255,200,0,0.4);
+}
+
+/* 7-Segment Anzeige für Portnummer */
+.port-seg-display {
+  transform: scale(0.75);
+  transform-origin: top center;
+  margin-top: -4px;
+  margin-bottom: -4px;
+}
+
+/* Port-Label (beschreibender Text unter dem Port) */
+.port-label-text {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 50px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+  line-height: 1;
+}
+.port-label-text.has-label { color: var(--text-mono); }
+
+/* VLAN Badge */
+.vlan-badge-wrap {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  justify-content: center;
+  min-height: 14px;
+}
+
+.vlan-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 14px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  color: #000;
+  padding: 0 3px;
+  letter-spacing: 0.3px;
+  border: 1px solid rgba(0,0,0,0.2);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+
+.vlan-badge-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 14px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--text-secondary);
+  padding: 0 3px;
+  border: 1px solid var(--rack-border);
+}
+
+/* ===================================================================
+   SFP PORT — Schmaler Fiber-Slot
+   =================================================================== */
+.sfp-port {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  transition: transform 0.1s;
+  position: relative;
+  width: 40px;
+  padding: 3px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+}
+.sfp-port:hover {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,0.03);
+}
+.sfp-port.drag-over {
+  border-color: var(--accent-green);
+  background: rgba(74,232,160,0.06);
+  box-shadow: 0 0 10px rgba(74,232,160,0.3);
+}
+.sfp-port.vlan-assigned {
+  border-color: var(--port-vlan-color, var(--rack-border));
+  box-shadow: 0 0 6px var(--port-vlan-glow, transparent);
+}
+.sfp-port.vlan-trunk {
+  border-style: dashed;
+  border-color: var(--port-vlan-color, var(--rack-border));
+}
+
+/* SFP Slot-Gehäuse */
+.sfp-housing {
+  width: 20px;
+  height: 26px;
+  background: linear-gradient(160deg, #888888 0%, #555555 55%, #333333 100%);
+  border: 1.5px solid #777;
+  border-radius: 2px;
+  position: relative;
+  box-shadow:
+    0 2px 5px rgba(0,0,0,0.6),
+    inset 0 1px 2px rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Slot-Öffnung */
+.sfp-slot {
+  width: 14px;
+  height: 20px;
+  background: radial-gradient(ellipse at 50% 30%, #1a1a2e, #070710);
+  border-radius: 1px;
+  border: 1px solid #1a1a2e;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* SFP-Symbol (kleines Faserkreuz) */
+.sfp-symbol {
+  width: 8px;
+  height: 8px;
+  position: relative;
+  opacity: 0.6;
+}
+.sfp-symbol::before {
+  content: '';
+  position: absolute;
+  top: 3px; left: 0;
+  width: 8px; height: 2px;
+  background: #4a90e8;
+  border-radius: 1px;
+}
+.sfp-symbol::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 3px;
+  width: 2px; height: 8px;
+  background: #4a90e8;
+  border-radius: 1px;
+}
+
+/* SFP Typtext */
+.sfp-type-label {
+  font-family: var(--font-mono);
+  font-size: 6px;
+  color: var(--accent-dim);
+  letter-spacing: 0.5px;
+  text-align: center;
+  opacity: 0.7;
+}
+
+/* ===================================================================
+   Retro Indicator Lamp — exakt wie Boosterpatch
+   =================================================================== */
+@keyframes lampGlow {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+.retro-lamp {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+  border: 2px solid #1c1c24;
+  background: radial-gradient(circle at 40% 35%, #2a1a0a, #0e0a06 60%, #080608);
+  box-shadow:
+    inset 0 1px 3px rgba(255,255,255,0.07),
+    inset 0 -1px 3px rgba(0,0,0,0.55),
+    0 2px 4px rgba(0,0,0,0.85);
+  transition: background 0.28s, box-shadow 0.28s, border-color 0.28s;
+}
+.retro-lamp::before {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 6px; height: 4px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+.retro-lamp.lamp-green {
+  background: radial-gradient(circle at 40% 35%, #0a3a1e, #041c0e 55%, #020a06);
+  border-color: #082a14;
+}
+.retro-lamp.lamp-green.on {
+  background: radial-gradient(circle at 40% 35%,
+    #e0fff0 0%, #80ffcc 22%, var(--led-on) 58%, #042018 100%);
+  border-color: #0a3020;
+  box-shadow:
+    0 0 9px var(--led-glow),
+    0 0 20px rgba(74,232,160,0.28),
+    inset 0 1px 3px rgba(150,255,200,0.22),
+    inset 0 -1px 3px rgba(0,0,0,0.3),
+    0 2px 4px rgba(0,0,0,0.7);
+  animation: lampGlow 2.8s ease-in-out infinite;
+}
+
+    /* ===== css/patch-table.css ===== */
+/* === SCHEMATISCH Tabelle === */
+#tabDetails {
+  overflow: auto;
+}
+
+.patch-table-wrap {
+  overflow: auto;
+  flex: 1;
+  padding: 16px 20px;
+}
+
+#patchTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+
+#patchTable th {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: var(--rack-bg);
+  border-bottom: 2px solid var(--rack-border);
+  padding: 8px 12px;
+  text-align: left;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+#patchTable td {
+  border-bottom: 1px solid rgba(42,48,80,0.5);
+  padding: 7px 12px;
+  vertical-align: middle;
+}
+
+#patchTable tr:hover td { background: rgba(255,255,255,0.02); }
+#patchTable tr.odd td { background: rgba(255,255,255,0.01); }
+
+/* Spalten */
+.pt-device {
+  font-family: var(--font-header);
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  white-space: nowrap;
+  vertical-align: top;
+  padding-top: 10px;
+  border-right: 1px solid var(--rack-border);
+  min-width: 140px;
+}
+
+.pt-port {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  width: 50px;
+}
+
+.pt-type {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  width: 46px;
+}
+
+.pt-label {
+  font-weight: 600;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pt-mode {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  width: 70px;
+}
+
+.pt-access-vlan,
+.pt-tagged {
+  /* td — kein flex, inline-flex Badges fließen nebeneinander */
+  line-height: 1.6;
+}
+
+.pt-vlan-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 16px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 4px;
+  border: 1px solid rgba(0,0,0,0.2);
+}
+
+.pt-speed {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  width: 60px;
+}
+
+.pt-notes {
+  font-size: 12px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Leer-Hinweis */
+#patchTableEmpty {
+  padding: 40px 20px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+    /* ===== css/vlan-manager.css ===== */
+/* === VLAN Manager Tab === */
+#tabVlans {
+  overflow: auto;
+}
+
+.vlan-manager-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px 10px;
+  border-bottom: 1px solid var(--rack-border);
+  flex-shrink: 0;
+}
+
+#vlanManagerContent {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* VLAN Tabelle */
+.vlan-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+
+.vlan-table th {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: var(--rack-bg);
+  border-bottom: 1px solid var(--rack-border);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.vlan-table td {
+  border-bottom: 1px solid var(--rack-bg);
+  padding: 8px 12px;
+  vertical-align: middle;
+}
+.vlan-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.vlan-td-id {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  width: 52px;
+}
+
+.vlan-td-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.vlan-td-color {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.vlan-color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.15);
+  flex-shrink: 0;
+}
+
+.vlan-color-hex {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.vlan-td-ports {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  width: 52px;
+}
+
+.vlan-td-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vlan-td-actions {
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.vlan-action-btn {
+  background: var(--rack-ear);
+  border: 1px solid var(--rack-border);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 3px 10px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.vlan-action-btn:hover { background: var(--sidebar-hover); color: var(--accent); border-color: var(--accent); }
+.vlan-action-btn.danger:hover { background: rgba(232,74,74,0.12); color: var(--accent-red); border-color: var(--accent-red); }
+
+/* ===================================================================
+   VLAN POPOVER (Port-Klick)
+   =================================================================== */
+.vlan-popover {
+  position: fixed;
+  z-index: 600;
+  background: #0d1117;
+  border: 1px solid #333;
+  border-top: 2px solid var(--accent);
+  width: 300px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.04);
+  animation: popoverIn 0.15s ease-out;
+}
+
+@keyframes popoverIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.vlan-pop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid #1e2535;
+  background: #111720;
+}
+
+.vlan-pop-title {
+  font-family: var(--font-header);
+  font-size: 16px;
+  letter-spacing: 3px;
+  color: var(--accent);
+}
+
+.vlan-pop-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  transition: color 0.1s;
+}
+.vlan-pop-close:hover { color: var(--accent-red); }
+
+.vlan-pop-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vlan-pop-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vlan-pop-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.vlan-pop-select,
+.vlan-pop-input {
+  background: #0a0c14;
+  border: 1px solid #2a3050;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 10px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+.vlan-pop-select:focus, .vlan-pop-input:focus { border-color: var(--accent); }
+.vlan-pop-select option { background: #0d1117; }
+
+/* Modus-Auswahl (Radio-Gruppe) */
+.pop-mode-group {
+  display: flex;
+  gap: 6px;
+}
+
+.pop-mode-opt {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  cursor: pointer;
+  flex: 1;
+}
+.pop-mode-opt input[type="radio"] { display: none; }
+.pop-mode-opt span {
+  flex: 1;
+  text-align: center;
+  padding: 5px 4px;
+  background: #0a0c14;
+  border: 1px solid #2a3050;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.pop-mode-opt input:checked + span {
+  background: rgba(232,200,74,0.1);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.pop-mode-opt span:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+
+/* Multi-Select für Tagged VLANs */
+.tagged-vlan-select {
+  min-height: 80px;
+  font-size: 12px;
+}
+
+.vlan-pop-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid #1e2535;
+  background: #111720;
+}
+
+.vlan-pop-cancel {
+  font-size: 12px;
+  padding: 6px 14px;
+}
+.vlan-pop-save {
+  font-size: 12px;
+  padding: 6px 16px;
+}
+
+    /* ===== css/modal.css ===== */
+/* === Modal System === */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal-box {
+  background: var(--sidebar-bg);
+  border: 1px solid var(--rack-border);
+  width: 480px;
+  max-width: 95vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+  animation: modalIn 0.2s ease;
+}
+
+@keyframes modalIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  background: var(--rack-bg);
+  border-bottom: 1px solid var(--rack-border);
+}
+
+.modal-title {
+  font-family: var(--font-header);
+  font-size: 22px;
+  letter-spacing: 3px;
+  color: var(--accent);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 4px;
+  transition: color 0.15s;
+}
+.modal-close:hover { color: var(--accent-red); }
+
+.modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.modal-field { display: flex; flex-direction: column; gap: 6px; }
+
+.modal-field label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.modal-field input[type="text"],
+.modal-field input[type="date"],
+.modal-field input[type="number"],
+.modal-field input[type="color"],
+.modal-field textarea,
+.modal-field select {
+  background: var(--app-bg);
+  border: 1px solid var(--rack-border);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 17px;
+  font-weight: 600;
+  padding: 9px 12px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s, background 0.15s;
+  letter-spacing: .5px;
+}
+.modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus {
+  border-color: var(--accent);
+  background: rgba(232,200,74,.04);
+}
+.modal-field select option { background: var(--rack-bg); }
+.modal-field input[type="color"] {
+  height: 44px;
+  padding: 4px;
+  cursor: pointer;
+}
+.modal-field textarea {
+  resize: vertical;
+  min-height: 70px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.modal-field .input-error {
+  color: var(--accent-red);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  display: none;
+}
+.modal-field.has-error input { border-color: var(--accent-red); }
+.modal-field.has-error .input-error { display: block; }
+
+/* Port-Count Inputs (nummerisch, breiter) */
+.port-count-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.port-count-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+.port-count-field label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+.port-count-field input[type="number"] {
+  background: var(--app-bg);
+  border: 1px solid var(--rack-border);
+  color: var(--text-primary);
+  font-family: var(--font-header);
+  font-size: 32px;
+  text-align: center;
+  letter-spacing: 4px;
+  padding: 8px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+.port-count-field input[type="number"]:focus { border-color: var(--accent); }
+.port-count-field input::-webkit-outer-spin-button,
+.port-count-field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.port-count-field input { -moz-appearance: textfield; }
+
+/* Device Preview */
+#newDevicePreview {
+  background: var(--app-bg);
+  border: 1px solid var(--rack-border);
+  padding: 12px;
+  min-height: 64px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--rack-border);
+  background: var(--rack-bg);
+}
+
+.btn-cancel {
+  background: transparent;
+  border: 1px solid var(--rack-border);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 8px 20px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.15s;
+}
+.btn-cancel:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+
+.btn-primary {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: #0d0f14;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 8px 24px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: #ffd84a; border-color: #ffd84a; }
+
+/* Color Picker Row (für VLAN Modal) */
+.color-picker-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.color-preview-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 3px;
+  border: 1px solid var(--rack-border);
+  flex-shrink: 0;
+}
+
+/* Vorschlag-Farben für schnelle VLAN-Auswahl */
+.color-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.color-preset-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.1s, transform 0.1s;
+}
+.color-preset-dot:hover {
+  border-color: rgba(255,255,255,0.5);
+  transform: scale(1.15);
+}
+.color-preset-dot.selected {
+  border-color: #fff;
+}
+
+/* Multi-Select für Tagged VLANs */
+.tagged-vlan-select {
+  background: var(--app-bg);
+  border: 1px solid var(--rack-border);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 4px;
+  outline: none;
+  width: 100%;
+  min-height: 90px;
+  transition: border-color 0.15s;
+}
+.tagged-vlan-select:focus { border-color: var(--accent); }
+.tagged-vlan-select option { padding: 4px 8px; background: var(--rack-bg); }
+.tagged-vlan-select option:checked { background: rgba(232,200,74,0.15); }
+
+    /* ===== css/misc.css ===== */
+/* === 11. 7-Segment Display — VFD/Nixie Röhren-Stil === */
+.seg-display {
+  display: inline-flex;
+  gap: 3px;
+  background: radial-gradient(ellipse at 40% 30%, #0e0800 0%, #040200 100%);
+  border: 1px solid #1a1000;
+  border-radius: 4px;
+  padding: 4px 5px;
+  box-shadow:
+    inset 0 0 8px rgba(0,0,0,0.95),
+    inset 0 1px 0 rgba(255,200,80,0.04),
+    0 0 0 1px #000,
+    0 2px 6px rgba(0,0,0,0.7);
+  margin-bottom: 3px;
+  position: relative;
+}
+.seg-display::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgba(255,220,120,0.04) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+.seg-digit {
+  position: relative;
+  width: 13px;
+  height: 23px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.seg {
+  position: absolute;
+  background: var(--seg-off);
+  border-radius: 1px;
+  transition: background 0.06s, box-shadow 0.06s;
+}
+.seg.on {
+  background: var(--seg-on);
+  box-shadow:
+    0 0 3px var(--seg-on-glow),
+    0 0 7px rgba(255,178,0,0.7),
+    0 0 14px rgba(255,140,0,0.35);
+}
+
+/* Horizontal segments */
+.seg-a { left: 2px;  top: 0;    width: 9px; height: 3px; border-radius: 1.5px; }
+.seg-g { left: 2px;  top: 10px; width: 9px; height: 3px; border-radius: 1.5px; }
+.seg-d { left: 2px;  bottom: 0; width: 9px; height: 3px; border-radius: 1.5px; }
+/* Vertikale Segmente */
+.seg-f { left: 0;   top: 2px;    width: 3px; height: 8px; border-radius: 1.5px; }
+.seg-b { right: 0;  top: 2px;   width: 3px; height: 8px; border-radius: 1.5px; }
+.seg-e { left: 0;   bottom: 2px; width: 3px; height: 8px; border-radius: 1.5px; }
+.seg-c { right: 0;  bottom: 2px; width: 3px; height: 8px; border-radius: 1.5px; }
+/* Diagonale Halb-Segmente */
+.seg-ul, .seg-ur, .seg-ll, .seg-lr { position: absolute; width: 2px; height: 12px; border-radius: 1px; }
+.seg-ul { left: 3px; top:  1px; transform: rotate(-27deg); }
+.seg-ur { left: 8px; top:  1px; transform: rotate( 27deg); }
+.seg-ll { left: 3px; top: 10px; transform: rotate( 27deg); }
+.seg-lr { left: 8px; top: 10px; transform: rotate(-27deg); }
+
+/* === Toast === */
+#toastContainer {
+  position: fixed;
+  bottom: 20px; right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 200;
+}
+
+.toast {
+  background: var(--sidebar-bg);
+  border: 1px solid var(--rack-border);
+  border-left: 3px solid var(--accent);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  padding: 10px 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+  animation: toastIn 0.2s ease;
+  min-width: 200px;
+  max-width: 360px;
+}
+.toast.success { border-left-color: var(--accent-green); }
+.toast.error   { border-left-color: var(--accent-red); }
+.toast.warning { border-left-color: var(--accent-orange); }
+.toast.out     { animation: toastOut 0.3s ease forwards; }
+
+@keyframes toastIn  { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: none; } }
+@keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateX(20px); } }
+@keyframes fadeIn   { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+  </style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header id="app-header">
+  <div class="hdr-left"></div>
+  <div class="hdr-center">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div>
+        <h1 class="app-title">NETZWERK<span>PATCH</span></h1>
+        <div class="app-version" id="appVersionDisplay">v0.1.0</div>
+      </div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="hdr-project-info">
+      <div id="projectNameDisplay" ondblclick="openProjectNameModal()" title="Doppelklick zum Umbenennen">Kein Projekt</div>
+      <div id="modifiedIndicator">● UNGESPEICHERT</div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== SIDEBAR ===== -->
+<nav id="sidebar">
+  <div class="sb-section-title">PROJEKT</div>
+  <button class="sb-btn green" onclick="newProject()"><span style="font-size:8px;font-weight:700;background:var(--accent-green);color:#000;padding:1px 4px;border-radius:2px;margin-right:2px;">NEW</span> Neues Projekt</button>
+  <div class="sb-sep"></div>
+
+  <div class="sb-section-title">NETZWERKGERÄTE</div>
+  <button class="sb-btn green" onclick="openNetworkDeviceModal()">⊕ Gerät anlegen</button>
+  <div class="sb-sep"></div>
+
+  <div class="sb-section-title">VLANS</div>
+  <button class="sb-btn green" onclick="openNewVlanModal()">⊕ Neue VLAN</button>
+  <div class="sb-sep"></div>
+
+  <div class="sb-section-title">WERKZEUGE</div>
+  <button class="sb-btn primary" onclick="saveProjectDialog()">💾 Speichern</button>
+  <button class="sb-btn" onclick="triggerLoad()">📂 Öffnen</button>
+  <button class="sb-btn" onclick="saveProjectAs()">↓ Speichern als …</button>
+  <button class="sb-btn" onclick="exportPrint()">🖨 Drucken</button>
+  <button class="sb-btn danger" onclick="clearAll()">✕ Leeren</button>
+</nav>
+
+<!-- Hidden file inputs -->
+<input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleFileLoad(event)">
+
+<!-- ===== MODAL: Speichern ===== -->
+<div class="modal-overlay" id="saveModal">
+  <div class="modal-box" style="width:400px;">
+    <div class="modal-header">
+      <div class="modal-title">SPEICHERN</div>
+      <button class="modal-close" onclick="closeModal('saveModal')">✕</button>
+    </div>
+    <div class="modal-body" id="saveModalBody"></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Neues Gerät ===== -->
+<div class="modal-overlay" id="newDeviceModal">
+  <div class="modal-box" style="width:520px;">
+    <div class="modal-header">
+      <div class="modal-title">NEUES NETZWERKGERÄT</div>
+      <button class="modal-close" onclick="closeModal('newDeviceModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field" id="newDeviceNameField">
+        <label>Gerätename <span style="color:var(--accent-red)">*</span></label>
+        <input type="text" id="newDeviceName" placeholder="z.B. Core Switch" maxlength="50" oninput="document.getElementById('newDeviceNameField').classList.remove('has-error')">
+        <div class="input-error">Bitte einen Gerätenamen eingeben.</div>
+      </div>
+      <div class="modal-field">
+        <label>Gerätetyp</label>
+        <select id="newDeviceType">
+          <option value="managed-switch">Managed Switch</option>
+          <option value="poe-switch">PoE Switch</option>
+          <option value="gigabit-switch">Gigabit Switch</option>
+          <option value="unmanaged-switch">Unmanaged Switch</option>
+        </select>
+      </div>
+      <div class="port-count-row">
+        <div class="port-count-field">
+          <label>RJ45 Ports (0–24)</label>
+          <input type="number" id="newDeviceRJ45" value="24" min="0" max="24" oninput="updateDevicePreview()">
+        </div>
+        <div class="port-count-field">
+          <label>SFP Ports (0–4)</label>
+          <input type="number" id="newDeviceSFP" value="0" min="0" max="4" oninput="updateDevicePreview()">
+        </div>
+      </div>
+      <div class="modal-field">
+        <label>Vorschau</label>
+        <div id="newDevicePreview"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('newDeviceModal')">Abbrechen</button>
+      <button class="btn-primary" onclick="confirmNewDevice()">Gerät anlegen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Projektname ===== -->
+<div class="modal-overlay" id="projectModal">
+  <div class="modal-box" style="width:380px;">
+    <div class="modal-header">
+      <div class="modal-title">PROJEKTNAME</div>
+      <button class="modal-close" onclick="closeModal('projectModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label>Projektname</label>
+        <input type="text" id="projectNameInput" placeholder="z.B. Büronetzwerk 2026" maxlength="60">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('projectModal')">Abbrechen</button>
+      <button class="btn-primary" onclick="confirmProjectName()">Übernehmen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Neues Projekt ===== -->
+<div class="modal-overlay" id="newProjectModal">
+  <div class="modal-box" style="width:460px;">
+    <div class="modal-header">
+      <div class="modal-title">NEUES PROJEKT</div>
+      <button class="modal-close" onclick="closeModal('newProjectModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field" id="npNameField">
+        <label>Projektname <span style="color:var(--accent-red)">*</span></label>
+        <input type="text" id="newProjectNameInput" placeholder="z.B. Büronetzwerk 2026" maxlength="60">
+        <div class="input-error">Bitte einen Projektnamen eingeben.</div>
+      </div>
+      <p style="font-size:11px;color:var(--text-secondary);font-family:var(--font-mono);line-height:1.6;">
+        Der Projektname wird beim Speichern als Dateiname verwendet.<br>
+        Im nächsten Schritt kannst du Switches anlegen.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('newProjectModal')">Abbrechen</button>
+      <button class="btn-primary" onclick="confirmNewProject()">Weiter →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: VLAN ===== -->
+<div class="modal-overlay" id="vlanModal">
+  <div class="modal-box" style="width:440px;">
+    <div class="modal-header">
+      <div class="modal-title" id="vlanModalTitle">NEUE VLAN</div>
+      <button class="modal-close" onclick="closeModal('vlanModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field" id="vlanIdField">
+        <label>VLAN ID (1–4094)</label>
+        <input type="number" id="vlanIdInput" min="1" max="4094" placeholder="z.B. 10">
+        <div class="input-error">Ungültige oder bereits vorhandene VLAN-ID.</div>
+      </div>
+      <div class="modal-field" id="vlanNameField">
+        <label>VLAN Name <span style="color:var(--accent-red)">*</span></label>
+        <input type="text" id="vlanNameInput" placeholder="z.B. Office" maxlength="30">
+        <div class="input-error">Bitte einen Namen eingeben.</div>
+      </div>
+      <div class="modal-field">
+        <label>Farbe</label>
+        <div class="color-picker-row">
+          <input type="color" id="vlanColorInput" value="#4a90e8" oninput="updateColorPreview(this.value)">
+          <div class="color-preview-box" id="vlanColorPreview" style="background:#4a90e8;"></div>
+        </div>
+        <div class="color-presets" id="vlanColorPresets"></div>
+      </div>
+      <div class="modal-field">
+        <label>Beschreibung (optional)</label>
+        <textarea id="vlanDescInput" placeholder="z.B. Büro-Netzwerk, Server-Segment …"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('vlanModal')">Abbrechen</button>
+      <button class="btn-primary" onclick="confirmVlan()">Übernehmen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN ===== -->
+<main id="main">
+
+  <!-- Empty State -->
+  <div id="emptyState">
+    <div class="empty-icon">⬡</div>
+    <h2>NETZWERKPATCH</h2>
+    <p>Neues Projekt starten oder vorhandenes laden.</p>
+    <div class="empty-actions">
+      <button class="btn-primary btn-large" onclick="newProject()">⊕ Neues Projekt</button>
+      <button class="btn-secondary btn-large" onclick="triggerLoad()">📂 Projekt laden</button>
+    </div>
+  </div>
+
+  <!-- App Tabs (sichtbar wenn Projekt vorhanden) -->
+  <div id="appTabs">
+    <div id="tabBar">
+      <button class="tab-btn active" id="tabBtnPatch" onclick="switchTab('patch')">PATCH-ANSICHT</button>
+      <button class="tab-btn" id="tabBtnDetails" onclick="switchTab('details')">SCHEMATISCH</button>
+      <button class="tab-btn" id="tabBtnVlans" onclick="switchTab('vlans')">VLANS</button>
+    </div>
+
+    <!-- Tab: Patch View -->
+    <div id="tabPatch" class="tab-content active">
+      <div id="patchView">
+        <!-- VLAN Sidebar Panel -->
+        <div id="vlanPanel">
+          <!-- populated by renderVlanPanel() -->
+        </div>
+        <!-- Devices -->
+        <div id="devicesContainer"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Schematisch -->
+    <div id="tabDetails" class="tab-content">
+      <div class="section-header">
+        <div class="section-title">SCHEMATISCH</div>
+      </div>
+      <div class="patch-table-wrap">
+        <table id="patchTable">
+          <thead>
+            <tr>
+              <th>Gerät</th>
+              <th>Port</th>
+              <th>Typ</th>
+              <th>Label</th>
+              <th>Modus</th>
+              <th>Access / Native VLAN</th>
+              <th>Tagged VLANs</th>
+              <th>Speed</th>
+              <th>Notizen</th>
+            </tr>
+          </thead>
+          <tbody id="patchTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab: VLAN Manager -->
+    <div id="tabVlans" class="tab-content">
+      <div class="vlan-manager-header">
+        <div class="section-title">VLAN VERWALTUNG</div>
+        <button class="btn-primary" style="font-size:12px;padding:6px 16px;" onclick="openNewVlanModal()">⊕ Neue VLAN</button>
+      </div>
+      <div id="vlanManagerContent"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div id="toastContainer"></div>
+
+<script>
+// ===== js/state.js =====
+'use strict';
+
+const APP_VERSION = 'v0.1.0';
+
+// ============================================================
+// 1. STATE
+// ============================================================
+const state = {
+  projectName: 'Unbenannt',
+  projectCreated: false,
+  created: null,
+  modified: false,
+  devices: [],   // Network Switches
+  vlans: [],     // Globale VLAN-Datenbank
+};
+
+// ============================================================
+// 2. UTILITIES
+// ============================================================
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+function markModified() {
+  state.modified = true;
+  const el = document.getElementById('modifiedIndicator');
+  if (el) el.classList.add('visible');
+}
+
+function markSaved() {
+  state.modified = false;
+  const el = document.getElementById('modifiedIndicator');
+  if (el) el.classList.remove('visible');
+}
+
+function updateProjectDisplay() {
+  const el = document.getElementById('projectNameDisplay');
+  if (el) el.textContent = state.projectName || 'Kein Projekt';
+  document.title = (state.projectName || 'NETZWERKPATCH') + ' — NETZWERKPATCH';
+}
+
+function showToast(msg, type = 'info', duration = 2800) {
+  const c = document.getElementById('toastContainer');
+  if (!c) return;
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => {
+    t.classList.add('out');
+    setTimeout(() => t.remove(), 300);
+  }, duration);
+}
+
+function escHtml(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function getDevice(id) {
+  return state.devices.find(d => d.id === id) || null;
+}
+
+// portUid = port.uid (eindeutige Identifikation, nicht die Display-Nummer)
+function getPort(deviceId, portUid) {
+  const dev = getDevice(deviceId);
+  if (!dev) return null;
+  return dev.ports.find(p => (p.uid ?? p.id) === portUid) || null;
+}
+
+function getVlan(id) {
+  return state.vlans.find(v => v.id === id) || null;
+}
+
+// Gibt eine schöne Hex-Farbe für die Hintergrundfärbung eines VLAN-Badges zurück
+// (leicht gedimmt für lesbare schwarze Schrift)
+function vlanBadgeStyle(color) {
+  return `background:${color};color:${contrastColor(color)};`;
+}
+
+// Einfache Kontrastfarbe (schwarz oder weiß)
+function contrastColor(hexColor) {
+  const r = parseInt(hexColor.slice(1,3), 16);
+  const g = parseInt(hexColor.slice(3,5), 16);
+  const b = parseInt(hexColor.slice(5,7), 16);
+  const lum = 0.299*r + 0.587*g + 0.114*b;
+  return lum > 128 ? '#000000' : '#ffffff';
+}
+
+// Gibt die primäre VLAN-Farbe eines Ports zurück (für Border-Glow)
+function getPortPrimaryColor(port) {
+  if (!port || port.mode === 'disabled') return null;
+  const vlanId = port.mode === 'access' ? port.accessVlan : port.nativeVlan;
+  const vlan = getVlan(vlanId);
+  return vlan ? vlan.color : null;
+}
+
+function updateEmptyState() {
+  const empty = document.getElementById('emptyState');
+  const tabs  = document.getElementById('appTabs');
+  if (!empty || !tabs) return;
+  if (state.projectCreated) {
+    empty.style.display = 'none';
+    tabs.classList.add('visible');
+  } else {
+    empty.style.display = '';
+    tabs.classList.remove('visible');
+  }
+}
+
+// Auto-save (alle 90s in localStorage)
+let autoSaveTimer = null;
+function scheduleAutoSave() {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => {
+    if (state.modified) saveToLocalStorage();
+  }, 90000);
+}
+
+function saveToLocalStorage() {
+  try {
+    localStorage.setItem('netzwerkpatch_autosave', JSON.stringify(buildSaveData()));
+    console.log('Auto-Save in localStorage.');
+  } catch(e) { /* ignore quota errors */ }
+}
+
+function buildSaveData() {
+  return {
+    appVersion:   APP_VERSION,
+    projectName:  state.projectName,
+    created:      state.created || new Date().toISOString(),
+    savedAt:      new Date().toISOString(),
+    devices:      state.devices,
+    vlans:        state.vlans,
+  };
+}
+
+// ===== js/ui.js =====
+// ============================================================
+// 3. MODALS
+// ============================================================
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.add('open');
+}
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('open');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) overlay.classList.remove('open');
+    });
+  });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+    closeVlanPopover();
+  }
+});
+
+// ============================================================
+// 4. TAB SYSTEM
+// ============================================================
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+  if (tabName === 'patch') {
+    document.getElementById('tabBtnPatch').classList.add('active');
+    document.getElementById('tabPatch').classList.add('active');
+  } else if (tabName === 'vlans') {
+    document.getElementById('tabBtnVlans').classList.add('active');
+    document.getElementById('tabVlans').classList.add('active');
+    renderVlanManagerTab();
+  } else {
+    document.getElementById('tabBtnDetails').classList.add('active');
+    document.getElementById('tabDetails').classList.add('active');
+    renderPatchTable();
+  }
+}
+
+// ============================================================
+// 5. PROJECT FUNCTIONS
+// ============================================================
+function newProject() {
+  openModal('newProjectModal');
+  setTimeout(() => {
+    const inp = document.getElementById('newProjectNameInput');
+    if (inp) inp.focus();
+  }, 100);
+}
+
+function confirmNewProject() {
+  const nameEl = document.getElementById('newProjectNameInput');
+  const fieldEl = document.getElementById('npNameField');
+  const name = nameEl ? nameEl.value.trim() : '';
+  if (!name) {
+    if (fieldEl) fieldEl.classList.add('has-error');
+    return;
+  }
+  if (fieldEl) fieldEl.classList.remove('has-error');
+  closeModal('newProjectModal');
+  state.projectName  = name;
+  state.created      = new Date().toISOString();
+  state.projectCreated = true;
+  state.devices      = [];
+  state.vlans        = [];
+  markSaved();
+  updateProjectDisplay();
+  updateEmptyState();
+  renderAllDevices();
+  renderVlanPanel();
+  // Standardmäßig VLAN 1 anlegen
+  if (state.vlans.length === 0) {
+    state.vlans.push({ id: 1, name: 'Default', color: '#4a90e8', description: 'Standard-VLAN' });
+    renderVlanPanel();
+  }
+  showToast('Neues Projekt angelegt: ' + name, 'success');
+  // Sofort Setup-Modal öffnen
+  openNetworkDeviceModal();
+}
+
+function openProjectNameModal() {
+  const inp = document.getElementById('projectNameInput');
+  if (inp) inp.value = state.projectName || '';
+  openModal('projectModal');
+  setTimeout(() => { if (inp) inp.focus(); }, 100);
+}
+
+function confirmProjectName() {
+  const inp = document.getElementById('projectNameInput');
+  const name = inp ? inp.value.trim() : '';
+  if (!name) return;
+  state.projectName = name;
+  markModified();
+  updateProjectDisplay();
+  closeModal('projectModal');
+}
+
+// ===== js/device-render.js =====
+// ============================================================
+// 7. RENDERING — SWITCH CARDS
+// ============================================================
+
+function renderAllDevices() {
+  const container = document.getElementById('devicesContainer');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (!state.projectCreated || state.devices.length === 0) {
+    const hint = document.createElement('div');
+    hint.style.cssText = 'padding:40px 20px;color:var(--text-secondary);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;opacity:0.7;';
+    hint.textContent = '← Klick auf ⊕ GERÄT um einen Switch anzulegen';
+    container.appendChild(hint);
+    return;
+  }
+
+  state.devices.forEach(d => container.appendChild(buildSwitchCard(d)));
+}
+
+function buildSwitchCard(device) {
+  const card = document.createElement('div');
+  card.className = 'device-card';
+  card.dataset.deviceId = device.id;
+
+  const rackUnit = document.createElement('div');
+  rackUnit.className = 'rack-unit';
+
+  rackUnit.appendChild(buildEar());
+
+  const face = document.createElement('div');
+  face.className = 'rack-face';
+
+  // Top bar
+  const topbar = document.createElement('div');
+  topbar.className = 'rack-topbar';
+
+  const nameEl = document.createElement('div');
+  nameEl.className = 'device-name-label';
+  nameEl.textContent = device.name;
+  nameEl.title = 'Doppelklick zum Umbenennen';
+  nameEl.ondblclick = () => startRenameDevice(device.id, nameEl);
+
+  const brand = document.createElement('div');
+  brand.className = 'brand-label';
+  const rj45 = device.ports.filter(p => p.type === 'rj45').length;
+  const sfp  = device.ports.filter(p => p.type === 'sfp').length;
+  brand.textContent = deviceTypeLabel(device.type) + ' · ' + rj45 + '× RJ45' + (sfp ? ' · ' + sfp + '× SFP' : '');
+
+  const controls = document.createElement('div');
+  controls.className = 'rack-controls';
+
+  const dupeBtn = document.createElement('button');
+  dupeBtn.className = 'rack-ctrl-btn';
+  dupeBtn.textContent = 'Duplizieren';
+  dupeBtn.onclick = () => duplicateDevice(device.id);
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'rack-ctrl-btn delete';
+  delBtn.textContent = '✕ Löschen';
+  delBtn.onclick = () => deleteDevice(device.id);
+
+  controls.appendChild(dupeBtn);
+  controls.appendChild(delBtn);
+
+  topbar.appendChild(nameEl);
+  topbar.appendChild(brand);
+  topbar.appendChild(controls);
+  face.appendChild(topbar);
+
+  // Port-Bereich
+  face.appendChild(buildPortsArea(device));
+
+  const hint = document.createElement('div');
+  hint.className = 'rack-hint';
+  hint.textContent = 'KLICK AUF PORT → VLAN ZUWEISEN';
+  face.appendChild(hint);
+
+  rackUnit.appendChild(face);
+  rackUnit.appendChild(buildEar(true));
+
+  card.appendChild(rackUnit);
+  return card;
+}
+
+function deviceTypeLabel(type) {
+  const map = {
+    'managed-switch':   'MANAGED SWITCH',
+    'poe-switch':       'POE SWITCH',
+    'gigabit-switch':   'GIGABIT SWITCH',
+    'unmanaged-switch': 'SWITCH',
+  };
+  return map[type] || 'SWITCH';
+}
+
+function buildEar(right = false) {
+  const ear = document.createElement('div');
+  ear.className = 'rack-ear' + (right ? ' right' : '');
+  ear.appendChild(buildScrew());
+  ear.appendChild(buildScrew());
+  return ear;
+}
+
+function buildScrew() {
+  const s = document.createElement('div');
+  s.className = 'rack-screw';
+  return s;
+}
+
+// ============================================================
+// PORT-BEREICH
+// ============================================================
+function buildPortsArea(device) {
+  const rj45Ports = device.ports.filter(p => p.type === 'rj45');
+  const sfpPorts  = device.ports.filter(p => p.type === 'sfp');
+
+  const area = document.createElement('div');
+  area.className = 'ports-area';
+
+  // RJ45 Sektion
+  if (rj45Ports.length > 0) {
+    const rj45Sec = document.createElement('div');
+    rj45Sec.className = 'ports-rj45-section';
+
+    const lbl = document.createElement('div');
+    lbl.className = 'ports-section-label';
+    lbl.textContent = 'RJ45';
+    rj45Sec.appendChild(lbl);
+
+    if (rj45Ports.length <= 12) {
+      // Einzeilig
+      const row = document.createElement('div');
+      row.className = 'ports-row';
+      rj45Ports.forEach(p => row.appendChild(buildRJ45Port(device, p)));
+      rj45Sec.appendChild(row);
+    } else {
+      // Zweizeilig: Ports 1…Hälfte oben, Rest unten
+      const half = Math.ceil(rj45Ports.length / 2);
+      const row1 = document.createElement('div');
+      row1.className = 'ports-row';
+      const row2 = document.createElement('div');
+      row2.className = 'ports-row';
+      rj45Ports.slice(0, half).forEach(p => row1.appendChild(buildRJ45Port(device, p)));
+      rj45Ports.slice(half).forEach(p => row2.appendChild(buildRJ45Port(device, p)));
+      rj45Sec.appendChild(row1);
+      rj45Sec.appendChild(row2);
+    }
+
+    area.appendChild(rj45Sec);
+  }
+
+  // SFP Sektion
+  if (sfpPorts.length > 0) {
+    const sfpSec = document.createElement('div');
+    sfpSec.className = 'ports-sfp-section';
+
+    const lbl = document.createElement('div');
+    lbl.className = 'ports-section-label';
+    lbl.textContent = 'SFP';
+    sfpSec.appendChild(lbl);
+
+    const row = document.createElement('div');
+    row.className = 'ports-row';
+    sfpPorts.forEach(p => row.appendChild(buildSFPPort(device, p)));
+    sfpSec.appendChild(row);
+
+    area.appendChild(sfpSec);
+  }
+
+  return area;
+}
+
+// ============================================================
+// RJ45 PORT
+// ============================================================
+function buildRJ45Port(device, port) {
+  const uid = port.uid ?? port.id;
+  const wrap = document.createElement('div');
+  wrap.className = 'rj45-port';
+  wrap.id = 'port_' + device.id + '_' + uid;
+  wrap.title = 'Port ' + port.id + (port.label ? ' — ' + port.label : '') + '\nKlick: VLAN zuweisen';
+
+  // VLAN Farbkodierung
+  applyPortVlanStyle(wrap, port);
+
+  // Status-LED
+  const led = document.createElement('div');
+  led.className = 'port-status-led' + (port.mode !== 'disabled' ? ' active' : '');
+  wrap.appendChild(led);
+
+  // Buchsen-Gehäuse
+  const housing = document.createElement('div');
+  housing.className = 'rj45-housing';
+
+  const opening = document.createElement('div');
+  opening.className = 'rj45-opening';
+
+  const pins = document.createElement('div');
+  pins.className = 'rj45-pins';
+  for (let i = 0; i < 8; i++) {
+    const pin = document.createElement('div');
+    pin.className = 'rj45-pin';
+    pins.appendChild(pin);
+  }
+  opening.appendChild(pins);
+  housing.appendChild(opening);
+  wrap.appendChild(housing);
+
+  // 7-Segment Portnummer (skaliert)
+  const segWrap = document.createElement('div');
+  segWrap.className = 'port-seg-display';
+  const portNumStr = String(port.id).padStart(2, '0');
+  segWrap.appendChild(buildSegDisplay(portNumStr + '  '));
+  wrap.appendChild(segWrap);
+
+  // Label-Text
+  const labelEl = document.createElement('div');
+  labelEl.className = 'port-label-text' + (port.label ? ' has-label' : '');
+  labelEl.textContent = port.label || ('P' + String(port.id).padStart(2, '0'));
+  labelEl.id = 'portlabel_' + device.id + '_' + uid;
+  wrap.appendChild(labelEl);
+
+  // VLAN-Badge
+  const badge = buildPortVlanBadge(port);
+  badge.id = 'vlan_badge_' + device.id + '_' + uid;
+  wrap.appendChild(badge);
+
+  // Drag-Drop: VLAN aus Sidebar droppen
+  wrap.addEventListener('dragover', e => {
+    e.preventDefault();
+    wrap.classList.add('drag-over');
+  });
+  wrap.addEventListener('dragleave', () => wrap.classList.remove('drag-over'));
+  wrap.addEventListener('drop', e => {
+    e.preventDefault();
+    wrap.classList.remove('drag-over');
+    const vlanId = parseInt(e.dataTransfer.getData('vlanId'));
+    if (vlanId) {
+      updatePortVlan(device.id, uid, 'access', vlanId, [], vlanId);
+      showToast('VLAN ' + vlanId + ' auf Port ' + port.id + ' gesetzt.', 'success', 1800);
+    }
+  });
+
+  // Klick → Popover
+  wrap.addEventListener('click', e => {
+    e.stopPropagation();
+    openVlanPopover(device.id, uid, wrap);
+  });
+
+  return wrap;
+}
+
+// ============================================================
+// SFP PORT
+// ============================================================
+function buildSFPPort(device, port) {
+  const uid = port.uid ?? port.id;
+  const wrap = document.createElement('div');
+  wrap.className = 'sfp-port';
+  wrap.id = 'port_' + device.id + '_' + uid;
+  wrap.title = 'SFP ' + port.id + (port.label ? ' — ' + port.label : '') + '\nKlick: VLAN zuweisen';
+
+  applyPortVlanStyle(wrap, port);
+
+  // Status-LED
+  const led = document.createElement('div');
+  led.className = 'port-status-led' + (port.mode !== 'disabled' ? ' active' : '');
+  wrap.appendChild(led);
+
+  // Slot-Gehäuse
+  const housing = document.createElement('div');
+  housing.className = 'sfp-housing';
+
+  const slot = document.createElement('div');
+  slot.className = 'sfp-slot';
+
+  const sym = document.createElement('div');
+  sym.className = 'sfp-symbol';
+  slot.appendChild(sym);
+  housing.appendChild(slot);
+  wrap.appendChild(housing);
+
+  // Typ-Label
+  const typeLbl = document.createElement('div');
+  typeLbl.className = 'sfp-type-label';
+  typeLbl.textContent = 'SFP';
+  wrap.appendChild(typeLbl);
+
+  // Port-Label
+  const labelEl = document.createElement('div');
+  labelEl.className = 'port-label-text' + (port.label ? ' has-label' : '');
+  labelEl.textContent = port.label || ('S' + String(port.id).padStart(2, '0'));
+  labelEl.id = 'portlabel_' + device.id + '_' + uid;
+  wrap.appendChild(labelEl);
+
+  // VLAN-Badge
+  const badge = buildPortVlanBadge(port);
+  badge.id = 'vlan_badge_' + device.id + '_' + uid;
+  wrap.appendChild(badge);
+
+  // Drag-Drop
+  wrap.addEventListener('dragover', e => { e.preventDefault(); wrap.classList.add('drag-over'); });
+  wrap.addEventListener('dragleave', () => wrap.classList.remove('drag-over'));
+  wrap.addEventListener('drop', e => {
+    e.preventDefault();
+    wrap.classList.remove('drag-over');
+    const vlanId = parseInt(e.dataTransfer.getData('vlanId'));
+    if (vlanId) {
+      updatePortVlan(device.id, uid, 'access', vlanId, [], vlanId);
+      showToast('VLAN ' + vlanId + ' auf SFP ' + port.id + ' gesetzt.', 'success', 1800);
+    }
+  });
+
+  // Klick → Popover
+  wrap.addEventListener('click', e => {
+    e.stopPropagation();
+    openVlanPopover(device.id, uid, wrap);
+  });
+
+  return wrap;
+}
+
+// ============================================================
+// VLAN STYLING FÜR PORTS
+// ============================================================
+function applyPortVlanStyle(portEl, port) {
+  portEl.classList.remove('vlan-assigned', 'vlan-trunk');
+  portEl.style.removeProperty('--port-vlan-color');
+  portEl.style.removeProperty('--port-vlan-glow');
+
+  if (port.mode === 'disabled') return;
+
+  const color = getPortPrimaryColor(port);
+  if (color) {
+    portEl.style.setProperty('--port-vlan-color', color);
+    portEl.style.setProperty('--port-vlan-glow', color + '60');
+    if (port.mode === 'trunk') {
+      portEl.classList.add('vlan-trunk');
+    } else {
+      portEl.classList.add('vlan-assigned');
+    }
+  }
+}
+
+function buildPortVlanBadge(port) {
+  const wrap = document.createElement('div');
+  wrap.className = 'vlan-badge-wrap';
+  // ID wird vom Aufrufer (buildRJ45Port/buildSFPPort) gesetzt
+
+  if (port.mode === 'disabled') return wrap;
+
+  if (port.mode === 'access') {
+    const vlan = getVlan(port.accessVlan);
+    if (vlan) {
+      const badge = document.createElement('div');
+      badge.className = 'vlan-badge';
+      badge.style.cssText = vlanBadgeStyle(vlan.color);
+      badge.textContent = vlan.id;
+      badge.title = vlan.name;
+      wrap.appendChild(badge);
+    }
+  } else if (port.mode === 'trunk') {
+    const allVlans = [port.nativeVlan, ...port.taggedVlans].filter(Boolean);
+    const unique = [...new Set(allVlans)];
+    const max = 3;
+    unique.slice(0, max).forEach(vid => {
+      const vlan = getVlan(vid);
+      if (!vlan) return;
+      const badge = document.createElement('div');
+      badge.className = 'vlan-badge';
+      badge.style.cssText = vlanBadgeStyle(vlan.color);
+      badge.textContent = vlan.id;
+      badge.title = vlan.name + (vid === port.nativeVlan ? ' (nativ)' : ' (tagged)');
+      wrap.appendChild(badge);
+    });
+    if (unique.length > max) {
+      const more = document.createElement('div');
+      more.className = 'vlan-badge-more';
+      more.textContent = '+' + (unique.length - max);
+      wrap.appendChild(more);
+    }
+  }
+
+  return wrap;
+}
+
+// ============================================================
+// PORT AKTUALISIEREN (ohne komplettes Neurendern)
+// ============================================================
+// portUid = port.uid (unique inner ID)
+function refreshPort(deviceId, portUid) {
+  const port = getPort(deviceId, portUid);
+  if (!port) return;
+
+  const portEl = document.getElementById('port_' + deviceId + '_' + portUid);
+  if (!portEl) return;
+
+  // VLAN-Stil
+  applyPortVlanStyle(portEl, port);
+
+  // LED
+  const led = portEl.querySelector('.port-status-led');
+  if (led) {
+    if (port.mode !== 'disabled') led.classList.add('active');
+    else led.classList.remove('active');
+  }
+
+  // Label
+  const labelEl = document.getElementById('portlabel_' + deviceId + '_' + portUid);
+  if (labelEl) {
+    labelEl.textContent = port.label || (port.type === 'sfp' ? 'S' : 'P') + String(port.id).padStart(2,'0');
+    labelEl.className = 'port-label-text' + (port.label ? ' has-label' : '');
+  }
+
+  // VLAN-Badge aktualisieren
+  const badgeWrap = portEl.querySelector('.vlan-badge-wrap');
+  if (badgeWrap) {
+    const newBadge = buildPortVlanBadge(port);
+    newBadge.id = 'vlan_badge_' + deviceId + '_' + portUid;
+    badgeWrap.replaceWith(newBadge);
+  }
+}
+
+// ============================================================
+// RENAME / DUPLICATE
+// ============================================================
+function startRenameDevice(deviceId, nameEl) {
+  const device = getDevice(deviceId);
+  if (!device) return;
+  const input = document.createElement('input');
+  input.className = 'device-name-input';
+  input.value = device.name;
+  nameEl.replaceWith(input);
+  input.focus();
+  input.select();
+
+  function finish() {
+    const newName = input.value.trim() || device.name;
+    device.name = newName;
+    markModified();
+    const card = document.querySelector('[data-device-id="' + deviceId + '"]');
+    if (card) card.replaceWith(buildSwitchCard(device));
+    renderPatchTable();
+  }
+  input.addEventListener('blur', finish);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') input.blur(); });
+}
+
+function duplicateDevice(id) {
+  const src = getDevice(id);
+  if (!src) return;
+  const copy = JSON.parse(JSON.stringify(src));
+  copy.id = generateUUID();
+  copy.name = src.name + ' (Kopie)';
+  copy.ports.forEach(p => { p.mode = 'disabled'; p.accessVlan = 1; p.taggedVlans = []; p.label = ''; });
+  state.devices.push(copy);
+  markModified();
+  renderAllDevices();
+  renderPatchTable();
+  showToast('Gerät dupliziert.', 'success');
+}
+
+// ============================================================
+// 9. 7-SEGMENT DISPLAY (von Boosterpatch übernommen)
+// ============================================================
+const SEG_MAP = {
+  '0':[1,1,1,1,1,1,0, 0,0,0,0], '1':[0,1,1,0,0,0,0, 0,0,0,0],
+  '2':[1,1,0,1,1,0,1, 0,0,0,0], '3':[1,1,1,1,0,0,1, 0,0,0,0],
+  '4':[0,1,1,0,0,1,1, 0,0,0,0], '5':[1,0,1,1,0,1,1, 0,0,0,0],
+  '6':[1,0,1,1,1,1,1, 0,0,0,0], '7':[1,1,1,0,0,0,0, 0,0,0,0],
+  '8':[1,1,1,1,1,1,1, 0,0,0,0], '9':[1,1,1,1,0,1,1, 0,0,0,0],
+  'A':[1,1,1,0,1,1,1, 0,0,0,0], 'B':[0,0,1,1,1,1,1, 0,0,0,0],
+  'C':[1,0,0,1,1,1,0, 0,0,0,0], 'D':[0,1,1,1,1,0,1, 0,0,0,0],
+  'E':[1,0,0,1,1,1,1, 0,0,0,0], 'F':[1,0,0,0,1,1,1, 0,0,0,0],
+  'G':[1,0,1,1,1,1,0, 0,0,0,0], 'H':[0,1,1,0,1,1,1, 0,0,0,0],
+  'I':[1,0,0,1,0,0,0, 0,0,0,0], 'J':[0,1,1,1,0,0,0, 0,0,0,0],
+  'K':[0,0,0,0,1,1,0, 0,1,0,1], 'L':[0,0,0,1,1,1,0, 0,0,0,0],
+  'M':[0,1,1,0,1,1,0, 1,1,0,0], 'N':[0,1,1,0,1,1,0, 1,0,0,1],
+  'O':[1,1,1,1,1,1,0, 0,0,0,0], 'P':[1,1,0,0,1,1,1, 0,0,0,0],
+  'Q':[1,1,1,1,1,1,0, 0,0,0,1], 'R':[1,1,0,0,1,1,1, 0,0,0,1],
+  'S':[1,0,1,1,0,1,1, 0,0,0,0], 'T':[1,0,0,0,0,0,0, 0,0,1,1],
+  'U':[0,1,1,1,1,1,0, 0,0,0,0], 'V':[0,0,0,0,0,1,0, 0,0,1,1],
+  'W':[0,1,1,0,1,1,0, 0,0,1,1], 'X':[0,0,0,0,0,0,0, 1,1,1,1],
+  'Y':[0,1,1,0,0,1,0, 0,0,0,0], 'Z':[1,0,0,1,0,0,0, 0,1,1,0],
+  '-':[0,0,0,0,0,0,1, 0,0,0,0], ' ':[0,0,0,0,0,0,0, 0,0,0,0],
+  '/':[0,0,0,0,0,0,0, 0,1,1,0], '.':[0,0,0,1,0,0,0, 0,0,0,0],
+  '[':[1,0,0,1,1,1,0, 0,0,0,0], ']':[1,1,1,1,0,0,0, 0,0,0,0],
+  '\\':[0,0,0,0,0,0,0, 1,0,0,1],
+};
+
+function buildSegDisplay(text) {
+  const disp = document.createElement('div');
+  disp.className = 'seg-display';
+  const str = (text || '    ').slice(0, 4).padEnd(4, ' ');
+  for (let i = 0; i < 4; i++) {
+    const ch = str[i].toUpperCase();
+    const digit = document.createElement('div');
+    digit.className = 'seg-digit';
+    const pattern = SEG_MAP[ch] || SEG_MAP[' '];
+    ['a','b','c','d','e','f','g','ul','ur','ll','lr'].forEach((s, j) => {
+      const seg = document.createElement('div');
+      seg.className = 'seg seg-' + s + (pattern[j] ? ' on' : '');
+      digit.appendChild(seg);
+    });
+    disp.appendChild(digit);
+  }
+  return disp;
+}
+
+// ===== js/device-crud.js =====
+// ============================================================
+// 10. DEVICE CRUD — Netzwerkgeräte anlegen / löschen
+// ============================================================
+
+// Standard-Portgeschwindigkeiten
+const DEFAULT_SPEED_RJ45 = '1G';
+const DEFAULT_SPEED_SFP  = '10G';
+
+function openNetworkDeviceModal() {
+  // Felder zurücksetzen
+  const nameEl = document.getElementById('newDeviceName');
+  const typeEl = document.getElementById('newDeviceType');
+  const rj45El = document.getElementById('newDeviceRJ45');
+  const sfpEl  = document.getElementById('newDeviceSFP');
+
+  if (nameEl) nameEl.value = '';
+  if (typeEl) typeEl.value = 'managed-switch';
+  if (rj45El) rj45El.value = '24';
+  if (sfpEl)  sfpEl.value  = '0';
+
+  updateDevicePreview();
+  openModal('newDeviceModal');
+  setTimeout(() => { if (nameEl) nameEl.focus(); }, 120);
+}
+
+function updateDevicePreview() {
+  const previewEl = document.getElementById('newDevicePreview');
+  if (!previewEl) return;
+
+  const rj45 = parseInt(document.getElementById('newDeviceRJ45')?.value || 24);
+  const sfp  = parseInt(document.getElementById('newDeviceSFP')?.value  || 0);
+  const total = rj45 + sfp;
+
+  previewEl.innerHTML = '';
+
+  const info = document.createElement('div');
+  info.style.cssText = 'font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);margin-bottom:8px;letter-spacing:1px;';
+  info.textContent = 'Gesamt: ' + total + ' Ports';
+  previewEl.appendChild(info);
+
+  // Mini-Vorschau der Ports
+  const portRow = document.createElement('div');
+  portRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:3px;';
+
+  for (let i = 0; i < Math.min(rj45, 24); i++) {
+    const p = document.createElement('div');
+    p.style.cssText = 'width:14px;height:12px;background:linear-gradient(160deg,#aaa 0%,#777 55%,#444 100%);border:1px solid #999;border-radius:1px;';
+    portRow.appendChild(p);
+  }
+  for (let i = 0; i < Math.min(sfp, 4); i++) {
+    const p = document.createElement('div');
+    p.style.cssText = 'width:10px;height:15px;background:linear-gradient(160deg,#888 0%,#555 55%,#333 100%);border:1px solid #777;border-radius:1px;margin-left:4px;';
+    portRow.appendChild(p);
+  }
+
+  previewEl.appendChild(portRow);
+}
+
+function confirmNewDevice() {
+  const nameEl = document.getElementById('newDeviceName');
+  const typeEl = document.getElementById('newDeviceType');
+  const rj45El = document.getElementById('newDeviceRJ45');
+  const sfpEl  = document.getElementById('newDeviceSFP');
+  const nameFieldEl = document.getElementById('newDeviceNameField');
+
+  const name = nameEl ? nameEl.value.trim() : '';
+  if (!name) {
+    if (nameFieldEl) nameFieldEl.classList.add('has-error');
+    return;
+  }
+  if (nameFieldEl) nameFieldEl.classList.remove('has-error');
+
+  const type  = typeEl  ? typeEl.value  : 'managed-switch';
+  const rj45  = Math.min(24, Math.max(0, parseInt(rj45El?.value  || 24)));
+  const sfp   = Math.min(4,  Math.max(0, parseInt(sfpEl?.value   || 0)));
+
+  if (rj45 + sfp < 1) {
+    showToast('Mindestens 1 Port erforderlich.', 'warning');
+    return;
+  }
+
+  createDevice(name, type, rj45, sfp);
+  closeModal('newDeviceModal');
+}
+
+function createDevice(name, type, rj45Count, sfpCount) {
+  const ports = [];
+  // RJ45 Ports (portNum 1-24, uid = portNum)
+  for (let i = 1; i <= rj45Count; i++) {
+    ports.push({
+      uid:         i,           // unique inner ID (used for DOM + state lookups)
+      id:          i,           // display number (P01 … P24)
+      type:        'rj45',
+      label:       '',
+      notes:       '',
+      active:      false,
+      speed:       DEFAULT_SPEED_RJ45,
+      mode:        'disabled',
+      accessVlan:  1,
+      taggedVlans: [],
+      nativeVlan:  1,
+    });
+  }
+  // SFP Ports (portNum 1-4, uid = 100+portNum → kein Konflikt mit RJ45)
+  for (let i = 1; i <= sfpCount; i++) {
+    ports.push({
+      uid:         100 + i,     // unique inner ID
+      id:          i,           // display number (S01 … S04)
+      type:        'sfp',
+      label:       '',
+      notes:       '',
+      active:      false,
+      speed:       DEFAULT_SPEED_SFP,
+      mode:        'disabled',
+      accessVlan:  1,
+      taggedVlans: [],
+      nativeVlan:  1,
+    });
+  }
+
+  const device = {
+    id:        generateUUID(),
+    name,
+    type,
+    rj45Count,
+    sfpCount,
+    notes:     '',
+    ports,
+  };
+
+  state.devices.push(device);
+  markModified();
+  renderAllDevices();
+  renderVlanPanel();
+  renderPatchTable();
+  showToast('Gerät "' + name + '" angelegt (' + (rj45Count + sfpCount) + ' Ports).', 'success');
+}
+
+function deleteDevice(id) {
+  const dev = getDevice(id);
+  if (!dev) return;
+  if (!confirm('Gerät "' + dev.name + '" wirklich löschen?')) return;
+  state.devices = state.devices.filter(d => d.id !== id);
+  markModified();
+  renderAllDevices();
+  renderPatchTable();
+  showToast('Gerät gelöscht.', 'info', 2000);
+}
+
+// ===== js/vlan.js =====
+// ============================================================
+// 11. VLAN MANAGEMENT
+// ============================================================
+
+const VLAN_PRESETS = [
+  '#4a90e8','#4ae8a0','#e8a04a','#e84a9f','#a04ae8',
+  '#e8e84a','#4ae8e8','#e84a4a','#4a6ee8','#88e84a',
+  '#e8604a','#c84ae8','#4ae8c8','#e8b44a','#8ae84a','#e84a74'
+];
+
+// ============================================================
+// VLAN CRUD
+// ============================================================
+function openNewVlanModal(editId) {
+  const modal = document.getElementById('vlanModal');
+  const title = document.getElementById('vlanModalTitle');
+  const idEl  = document.getElementById('vlanIdInput');
+  const nameEl = document.getElementById('vlanNameInput');
+  const colorEl = document.getElementById('vlanColorInput');
+  const descEl = document.getElementById('vlanDescInput');
+  const idField = document.getElementById('vlanIdField');
+
+  if (editId != null) {
+    // Bearbeiten
+    const vlan = getVlan(editId);
+    if (!vlan) return;
+    if (title) title.textContent = 'VLAN BEARBEITEN';
+    if (idEl)   { idEl.value = vlan.id; idEl.disabled = true; }
+    if (nameEl)  nameEl.value = vlan.name;
+    if (colorEl) { colorEl.value = vlan.color; updateColorPreview(vlan.color); }
+    if (descEl)  descEl.value = vlan.description || '';
+    modal.dataset.editId = editId;
+  } else {
+    // Neu
+    if (title) title.textContent = 'NEUE VLAN';
+    if (idEl)   { idEl.value = nextFreeVlanId(); idEl.disabled = false; }
+    if (nameEl)  nameEl.value = '';
+    const presetColor = VLAN_PRESETS[(state.vlans.length) % VLAN_PRESETS.length];
+    if (colorEl) { colorEl.value = presetColor; updateColorPreview(presetColor); }
+    if (descEl)  descEl.value = '';
+    delete modal.dataset.editId;
+  }
+  if (idField) idField.classList.remove('has-error');
+  openModal('vlanModal');
+  setTimeout(() => { if (nameEl) nameEl.focus(); }, 120);
+  renderColorPresets();
+}
+
+function nextFreeVlanId() {
+  const used = new Set(state.vlans.map(v => v.id));
+  for (let i = 2; i <= 4094; i++) {
+    if (!used.has(i)) return i;
+  }
+  return 4094;
+}
+
+function confirmVlan() {
+  const modal  = document.getElementById('vlanModal');
+  const idEl   = document.getElementById('vlanIdInput');
+  const nameEl = document.getElementById('vlanNameInput');
+  const colorEl = document.getElementById('vlanColorInput');
+  const descEl = document.getElementById('vlanDescInput');
+  const idField = document.getElementById('vlanIdField');
+  const nameField = document.getElementById('vlanNameField');
+
+  const id    = parseInt(idEl?.value || 0);
+  const name  = nameEl?.value.trim() || '';
+  const color = colorEl?.value || '#4a90e8';
+  const desc  = descEl?.value.trim() || '';
+
+  let hasError = false;
+  if (!name) {
+    if (nameField) nameField.classList.add('has-error');
+    hasError = true;
+  } else {
+    if (nameField) nameField.classList.remove('has-error');
+  }
+
+  const isEdit = modal.dataset.editId != null;
+  if (!isEdit) {
+    if (!id || id < 1 || id > 4094 || (state.vlans.some(v => v.id === id))) {
+      if (idField) idField.classList.add('has-error');
+      hasError = true;
+    } else {
+      if (idField) idField.classList.remove('has-error');
+    }
+  }
+
+  if (hasError) return;
+
+  if (isEdit) {
+    const vlan = getVlan(parseInt(modal.dataset.editId));
+    if (vlan) {
+      vlan.name = name;
+      vlan.color = color;
+      vlan.description = desc;
+      showToast('VLAN ' + vlan.id + ' aktualisiert.', 'success');
+    }
+  } else {
+    state.vlans.push({ id, name, color, description: desc });
+    state.vlans.sort((a,b) => a.id - b.id);
+    showToast('VLAN ' + id + ' angelegt.', 'success');
+  }
+
+  markModified();
+  closeModal('vlanModal');
+  renderVlanPanel();
+  renderVlanManagerTab();
+  renderAllDevices(); // Badges aktualisieren
+  renderPatchTable();
+}
+
+function deleteVlan(id) {
+  const vlan = getVlan(id);
+  if (!vlan) return;
+  // Prüfen ob Ports dieses VLAN nutzen
+  const used = [];
+  state.devices.forEach(d => {
+    d.ports.forEach(p => {
+      if (p.accessVlan === id || p.nativeVlan === id || p.taggedVlans.includes(id)) {
+        used.push(d.name + ':Port' + p.id);
+      }
+    });
+  });
+  let msg = 'VLAN ' + id + ' (' + vlan.name + ') wirklich löschen?';
+  if (used.length > 0) {
+    msg += '\n\nDieses VLAN ist noch ' + used.length + ' Port(s) zugewiesen:\n' + used.slice(0,5).join(', ');
+    if (used.length > 5) msg += ' …';
+  }
+  if (!confirm(msg)) return;
+  state.vlans = state.vlans.filter(v => v.id !== id);
+  markModified();
+  renderVlanPanel();
+  renderVlanManagerTab();
+  renderAllDevices();
+  renderPatchTable();
+  showToast('VLAN ' + id + ' gelöscht.', 'info');
+}
+
+// ============================================================
+// VLAN SIDEBAR PANEL
+// ============================================================
+function renderVlanPanel() {
+  const panel = document.getElementById('vlanPanel');
+  if (!panel) return;
+  panel.innerHTML = '';
+
+  const header = document.createElement('div');
+  header.className = 'vlan-panel-header';
+  header.textContent = 'VLANS';
+  panel.appendChild(header);
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'vlan-panel-add';
+  addBtn.textContent = '⊕ Neue VLAN';
+  addBtn.onclick = () => openNewVlanModal();
+  panel.appendChild(addBtn);
+
+  if (state.vlans.length === 0) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'padding:12px;font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);letter-spacing:0.5px;opacity:0.7;';
+    empty.textContent = 'Noch keine VLANs';
+    panel.appendChild(empty);
+    return;
+  }
+
+  const sep = document.createElement('div');
+  sep.className = 'vlan-panel-sep';
+  panel.appendChild(sep);
+
+  state.vlans.forEach(vlan => {
+    const entry = document.createElement('div');
+    entry.className = 'vlan-entry';
+    entry.draggable = true;
+    entry.title = 'VLAN ' + vlan.id + ': ' + vlan.name + '\nZiehen → Port zum Zuweisen';
+    entry.dataset.vlanId = vlan.id;
+
+    entry.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('vlanId', vlan.id);
+      e.dataTransfer.effectAllowed = 'link';
+    });
+
+    const dot = document.createElement('div');
+    dot.className = 'vlan-entry-dot';
+    dot.style.background = vlan.color;
+    dot.style.boxShadow = '0 0 4px ' + vlan.color + '80';
+
+    const name = document.createElement('div');
+    name.className = 'vlan-entry-name';
+    name.textContent = vlan.name;
+
+    const idLbl = document.createElement('div');
+    idLbl.className = 'vlan-entry-id';
+    idLbl.textContent = vlan.id;
+
+    entry.appendChild(dot);
+    entry.appendChild(name);
+    entry.appendChild(idLbl);
+    panel.appendChild(entry);
+  });
+}
+
+// ============================================================
+// VLAN MANAGER TAB
+// ============================================================
+function renderVlanManagerTab() {
+  const container = document.getElementById('vlanManagerContent');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (state.vlans.length === 0) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'padding:40px 20px;font-family:var(--font-mono);font-size:12px;color:var(--text-secondary);text-align:center;letter-spacing:1px;';
+    empty.textContent = 'Noch keine VLANs definiert. Klick auf ⊕ NEUE VLAN.';
+    container.appendChild(empty);
+    return;
+  }
+
+  const table = document.createElement('table');
+  table.className = 'vlan-table';
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Farbe</th>
+        <th>Ports</th>
+        <th>Beschreibung</th>
+        <th></th>
+      </tr>
+    </thead>
+  `;
+
+  const tbody = document.createElement('tbody');
+  state.vlans.forEach(vlan => {
+    const portCount = countPortsUsingVlan(vlan.id);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="vlan-td-id">${vlan.id}</td>
+      <td class="vlan-td-name">${escHtml(vlan.name)}</td>
+      <td class="vlan-td-color">
+        <div class="vlan-color-swatch" style="background:${vlan.color};"></div>
+        <span class="vlan-color-hex">${vlan.color}</span>
+      </td>
+      <td class="vlan-td-ports">${portCount > 0 ? portCount + '×' : '—'}</td>
+      <td class="vlan-td-desc">${escHtml(vlan.description || '')}</td>
+      <td class="vlan-td-actions">
+        <button class="vlan-action-btn" onclick="openNewVlanModal(${vlan.id})">Bearbeiten</button>
+        <button class="vlan-action-btn danger" onclick="deleteVlan(${vlan.id})">Löschen</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  container.appendChild(table);
+}
+
+function countPortsUsingVlan(vlanId) {
+  let count = 0;
+  state.devices.forEach(d => {
+    d.ports.forEach(p => {
+      if (p.mode === 'access' && p.accessVlan === vlanId) count++;
+      else if (p.mode === 'trunk' && (p.nativeVlan === vlanId || p.taggedVlans.includes(vlanId))) count++;
+    });
+  });
+  return count;
+}
+
+// ============================================================
+// VLAN POPOVER (Port-Klick)
+// ============================================================
+let currentPopover = null;
+let popoverDeviceId = null;
+let popoverPortId   = null;
+
+function openVlanPopover(deviceId, portId, anchorEl) {
+  closeVlanPopover();
+
+  const port = getPort(deviceId, portId);
+  if (!port) return;
+
+  popoverDeviceId = deviceId;
+  popoverPortId   = portId;
+
+  const pop = document.createElement('div');
+  pop.className = 'vlan-popover';
+  pop.id = 'vlanPopover';
+
+  // Titel
+  const hdr = document.createElement('div');
+  hdr.className = 'vlan-pop-header';
+  const typeLabel = port.type === 'sfp' ? 'SFP ' : 'PORT ';
+  hdr.innerHTML = `
+    <span class="vlan-pop-title">${typeLabel}${port.id}</span>
+    <button class="vlan-pop-close" onclick="closeVlanPopover()">✕</button>
+  `;
+  pop.appendChild(hdr);
+
+  // Body
+  const body = document.createElement('div');
+  body.className = 'vlan-pop-body';
+
+  // Modus
+  body.innerHTML += `
+    <div class="vlan-pop-row">
+      <label class="vlan-pop-label">MODUS</label>
+      <div class="pop-mode-group">
+        <label class="pop-mode-opt">
+          <input type="radio" name="popMode" value="disabled" ${port.mode==='disabled'?'checked':''}>
+          <span>Deaktiviert</span>
+        </label>
+        <label class="pop-mode-opt">
+          <input type="radio" name="popMode" value="access" ${port.mode==='access'?'checked':''}>
+          <span>Access</span>
+        </label>
+        <label class="pop-mode-opt">
+          <input type="radio" name="popMode" value="trunk" ${port.mode==='trunk'?'checked':''}>
+          <span>Trunk</span>
+        </label>
+      </div>
+    </div>
+  `;
+
+  // Access VLAN
+  const accessVlanOptions = state.vlans.map(v =>
+    `<option value="${v.id}" ${v.id===port.accessVlan?'selected':''}>${v.id} — ${escHtml(v.name)}</option>`
+  ).join('');
+  body.innerHTML += `
+    <div class="vlan-pop-row" id="popAccessRow">
+      <label class="vlan-pop-label">ACCESS VLAN</label>
+      <select id="popAccessVlan" class="vlan-pop-select">
+        ${accessVlanOptions}
+      </select>
+    </div>
+  `;
+
+  // Trunk: Native VLAN + Tagged VLANs
+  const nativeVlanOptions = state.vlans.map(v =>
+    `<option value="${v.id}" ${v.id===port.nativeVlan?'selected':''}>${v.id} — ${escHtml(v.name)}</option>`
+  ).join('');
+  const taggedVlanOptions = state.vlans.map(v =>
+    `<option value="${v.id}" ${port.taggedVlans.includes(v.id)?'selected':''}>${v.id} — ${escHtml(v.name)}</option>`
+  ).join('');
+  body.innerHTML += `
+    <div class="vlan-pop-row" id="popNativeRow">
+      <label class="vlan-pop-label">NATIVE VLAN</label>
+      <select id="popNativeVlan" class="vlan-pop-select">
+        ${nativeVlanOptions}
+      </select>
+    </div>
+    <div class="vlan-pop-row" id="popTaggedRow">
+      <label class="vlan-pop-label">TAGGED VLANS</label>
+      <select id="popTaggedVlans" class="vlan-pop-select tagged-vlan-select" multiple size="4">
+        ${taggedVlanOptions}
+      </select>
+    </div>
+  `;
+
+  // Geschwindigkeit
+  const speeds = ['100M','1G','2.5G','10G','25G'];
+  const speedOptions = speeds.map(s =>
+    `<option value="${s}" ${s===port.speed?'selected':''}>${s}</option>`
+  ).join('');
+  body.innerHTML += `
+    <div class="vlan-pop-row">
+      <label class="vlan-pop-label">GESCHWINDIGKEIT</label>
+      <select id="popSpeed" class="vlan-pop-select">
+        ${speedOptions}
+      </select>
+    </div>
+  `;
+
+  // Label + Notizen
+  body.innerHTML += `
+    <div class="vlan-pop-row">
+      <label class="vlan-pop-label">LABEL</label>
+      <input type="text" id="popLabel" class="vlan-pop-input" value="${escHtml(port.label)}" maxlength="30" placeholder="z.B. PC-Büro">
+    </div>
+    <div class="vlan-pop-row">
+      <label class="vlan-pop-label">NOTIZEN</label>
+      <input type="text" id="popNotes" class="vlan-pop-input" value="${escHtml(port.notes)}" maxlength="80" placeholder="optional">
+    </div>
+  `;
+
+  pop.appendChild(body);
+
+  // Footer
+  const footer = document.createElement('div');
+  footer.className = 'vlan-pop-footer';
+  footer.innerHTML = `
+    <button class="btn-cancel vlan-pop-cancel" onclick="closeVlanPopover()">Abbrechen</button>
+    <button class="btn-primary vlan-pop-save" onclick="saveVlanPopover()">Übernehmen</button>
+  `;
+  pop.appendChild(footer);
+
+  document.body.appendChild(pop);
+  currentPopover = pop;
+
+  // Modus-Sichtbarkeit schalten
+  updatePopoverMode();
+  pop.querySelectorAll('input[name="popMode"]').forEach(r => {
+    r.addEventListener('change', updatePopoverMode);
+  });
+
+  // Positionierung
+  positionPopover(pop, anchorEl);
+
+  // Klick außerhalb → schließen
+  setTimeout(() => {
+    document.addEventListener('click', outsidePopoverClick, { once: false });
+  }, 100);
+}
+
+function updatePopoverMode() {
+  const mode = document.querySelector('input[name="popMode"]:checked')?.value || 'disabled';
+  const accessRow  = document.getElementById('popAccessRow');
+  const nativeRow  = document.getElementById('popNativeRow');
+  const taggedRow  = document.getElementById('popTaggedRow');
+
+  if (accessRow)  accessRow.style.display  = mode === 'access'  ? '' : 'none';
+  if (nativeRow)  nativeRow.style.display  = mode === 'trunk'   ? '' : 'none';
+  if (taggedRow)  taggedRow.style.display  = mode === 'trunk'   ? '' : 'none';
+}
+
+function positionPopover(pop, anchor) {
+  pop.style.position = 'fixed';
+  pop.style.zIndex   = '600';
+  const rect = anchor.getBoundingClientRect();
+  let top  = rect.bottom + 8;
+  let left = rect.left;
+  const pw = 300;
+  if (left + pw > window.innerWidth - 16) left = window.innerWidth - pw - 16;
+  if (left < 8) left = 8;
+  if (top + 400 > window.innerHeight - 16) top = rect.top - 400 - 8;
+  if (top < 8) top = 8;
+  pop.style.top  = top  + 'px';
+  pop.style.left = left + 'px';
+}
+
+function outsidePopoverClick(e) {
+  if (currentPopover && !currentPopover.contains(e.target) && !e.target.closest('.rj45-port') && !e.target.closest('.sfp-port')) {
+    closeVlanPopover();
+  }
+}
+
+function closeVlanPopover() {
+  document.removeEventListener('click', outsidePopoverClick);
+  if (currentPopover) {
+    currentPopover.remove();
+    currentPopover = null;
+  }
+  popoverDeviceId = null;
+  popoverPortId   = null;
+}
+
+function saveVlanPopover() {
+  const mode   = document.querySelector('input[name="popMode"]:checked')?.value || 'disabled';
+  const access = parseInt(document.getElementById('popAccessVlan')?.value || 1);
+  const native = parseInt(document.getElementById('popNativeVlan')?.value || 1);
+  const tagged = Array.from(document.getElementById('popTaggedVlans')?.selectedOptions || []).map(o => parseInt(o.value));
+  const speed  = document.getElementById('popSpeed')?.value || '1G';
+  const label  = (document.getElementById('popLabel')?.value || '').trim();
+  const notes  = (document.getElementById('popNotes')?.value || '').trim();
+
+  updatePortVlan(popoverDeviceId, popoverPortId, mode, access, tagged, native, speed, label, notes);
+  closeVlanPopover();
+}
+
+// ============================================================
+// COLOR PREVIEW & PRESETS (für VLAN Modal)
+// ============================================================
+function updateColorPreview(color) {
+  const box = document.getElementById('vlanColorPreview');
+  if (box) box.style.background = color;
+}
+
+function renderColorPresets() {
+  const container = document.getElementById('vlanColorPresets');
+  if (!container) return;
+  container.innerHTML = '';
+  const currentColor = document.getElementById('vlanColorInput')?.value || '';
+  VLAN_PRESETS.forEach(color => {
+    const dot = document.createElement('div');
+    dot.className = 'color-preset-dot' + (color === currentColor ? ' selected' : '');
+    dot.style.background = color;
+    dot.title = color;
+    dot.onclick = () => {
+      const inp = document.getElementById('vlanColorInput');
+      if (inp) { inp.value = color; updateColorPreview(color); }
+      container.querySelectorAll('.color-preset-dot').forEach(d => d.classList.remove('selected'));
+      dot.classList.add('selected');
+    };
+    container.appendChild(dot);
+  });
+}
+
+// ===== js/patch.js =====
+// ============================================================
+// 12. PATCH — Port-VLAN-Zuweisung & Tabelle
+// ============================================================
+
+// Atomare Aktualisierung der Port-Konfiguration
+// portUid = port.uid (unique inner ID, nicht die Display-Nummer)
+function updatePortVlan(deviceId, portUid, mode, accessVlan, taggedVlans, nativeVlan, speed, label, notes) {
+  const device = getDevice(deviceId);
+  if (!device) return;
+  const port = device.ports.find(p => (p.uid ?? p.id) === portUid);
+  if (!port) return;
+
+  port.mode        = mode        ?? port.mode;
+  port.accessVlan  = accessVlan  ?? port.accessVlan;
+  port.taggedVlans = taggedVlans ?? port.taggedVlans;
+  port.nativeVlan  = nativeVlan  ?? port.nativeVlan;
+  if (speed !== undefined) port.speed = speed;
+  if (label !== undefined) port.label = label;
+  if (notes !== undefined) port.notes = notes;
+
+  markModified();
+  refreshPort(deviceId, portUid);
+  renderPatchTable();
+}
+
+// ============================================================
+// SCHEMATISCH-TABELLE
+// ============================================================
+function renderPatchTable() {
+  const tbody = document.getElementById('patchTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (state.devices.length === 0) return;
+
+  state.devices.forEach(device => {
+    const rj45Ports = device.ports.filter(p => p.type === 'rj45');
+    const sfpPorts  = device.ports.filter(p => p.type === 'sfp');
+    const allPorts  = [...rj45Ports, ...sfpPorts];
+
+    allPorts.forEach((port, idx) => {
+      const tr = document.createElement('tr');
+      if (idx % 2 !== 0) tr.classList.add('odd');
+
+      // Gerätename (nur erste Zeile des Geräts)
+      const tdDevice = document.createElement('td');
+      tdDevice.className = 'pt-device';
+      if (idx === 0) {
+        tdDevice.textContent = device.name;
+        tdDevice.rowSpan = allPorts.length;
+      }
+      if (idx === 0) tr.appendChild(tdDevice);
+
+      // Port-Nummer
+      const tdPort = document.createElement('td');
+      tdPort.className = 'pt-port';
+      const prefix = port.type === 'sfp' ? 'S' : 'P';
+      tdPort.textContent = prefix + String(port.id).padStart(2, '0');
+      tr.appendChild(tdPort);
+
+      // Typ
+      const tdType = document.createElement('td');
+      tdType.className = 'pt-type';
+      tdType.textContent = port.type.toUpperCase();
+      tr.appendChild(tdType);
+
+      // Label
+      const tdLabel = document.createElement('td');
+      tdLabel.className = 'pt-label';
+      tdLabel.textContent = port.label || '—';
+      if (port.label) tdLabel.style.color = 'var(--text-mono)';
+      tr.appendChild(tdLabel);
+
+      // Modus
+      const tdMode = document.createElement('td');
+      tdMode.className = 'pt-mode';
+      const modeLabels = { 'access':'ACCESS', 'trunk':'TRUNK', 'disabled':'—' };
+      tdMode.textContent = modeLabels[port.mode] || port.mode;
+      if (port.mode === 'access') tdMode.style.color = 'var(--accent-green)';
+      else if (port.mode === 'trunk') tdMode.style.color = 'var(--accent-orange)';
+      tr.appendChild(tdMode);
+
+      // Access VLAN / Native VLAN
+      const tdAccessVlan = document.createElement('td');
+      tdAccessVlan.className = 'pt-access-vlan';
+      if (port.mode === 'access') {
+        const vlan = getVlan(port.accessVlan);
+        if (vlan) {
+          tdAccessVlan.innerHTML = `<span class="pt-vlan-badge" style="${vlanBadgeStyle(vlan.color)}">${vlan.id}</span> ${escHtml(vlan.name)}`;
+        }
+      } else if (port.mode === 'trunk') {
+        const vlan = getVlan(port.nativeVlan);
+        if (vlan) {
+          tdAccessVlan.innerHTML = `<span class="pt-vlan-badge" style="${vlanBadgeStyle(vlan.color)}">${vlan.id}</span> <span style="color:var(--text-secondary)">nativ</span>`;
+        }
+      } else {
+        tdAccessVlan.textContent = '—';
+        tdAccessVlan.style.color = 'var(--text-secondary)';
+      }
+      tr.appendChild(tdAccessVlan);
+
+      // Tagged VLANs
+      const tdTagged = document.createElement('td');
+      tdTagged.className = 'pt-tagged';
+      if (port.mode === 'trunk' && port.taggedVlans.length > 0) {
+        const badges = port.taggedVlans.map(vid => {
+          const vlan = getVlan(vid);
+          if (!vlan) return '';
+          return `<span class="pt-vlan-badge" style="${vlanBadgeStyle(vlan.color)}" title="${escHtml(vlan.name)}">${vlan.id}</span>`;
+        }).join(' ');
+        tdTagged.innerHTML = badges;
+      } else {
+        tdTagged.textContent = '—';
+        tdTagged.style.color = 'var(--text-secondary)';
+      }
+      tr.appendChild(tdTagged);
+
+      // Geschwindigkeit
+      const tdSpeed = document.createElement('td');
+      tdSpeed.className = 'pt-speed';
+      tdSpeed.textContent = port.speed || '—';
+      if (port.mode !== 'disabled') tdSpeed.style.color = 'var(--text-primary)';
+      else tdSpeed.style.color = 'var(--text-secondary)';
+      tr.appendChild(tdSpeed);
+
+      // Notizen
+      const tdNotes = document.createElement('td');
+      tdNotes.className = 'pt-notes';
+      tdNotes.textContent = port.notes || '';
+      tdNotes.style.color = 'var(--text-secondary)';
+      tr.appendChild(tdNotes);
+
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+// ===== js/storage.js =====
+// ============================================================
+// 13. FILE I/O — Projekt speichern & laden
+// ============================================================
+
+// FileSystem Access API Handle (für direktes Speichern)
+let fileHandle = null;
+
+function triggerLoad() {
+  if (state.modified && state.devices.length > 0) {
+    if (!confirm('Ungespeicherte Änderungen gehen verloren. Trotzdem öffnen?')) return;
+  }
+  document.getElementById('fileInput').click();
+}
+
+function handleFileLoad(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      loadProjectData(data);
+      showToast('Projekt geladen: ' + (data.projectName || file.name), 'success');
+    } catch {
+      showToast('Fehler beim Laden der Datei.', 'error');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function loadProjectData(data) {
+  if (!data || !Array.isArray(data.devices)) {
+    showToast('Ungültiges Projektformat.', 'error');
+    return;
+  }
+  state.projectName    = data.projectName || 'Unbenannt';
+  state.created        = data.created || new Date().toISOString();
+  state.projectCreated = true;
+  state.devices        = data.devices || [];
+  state.vlans          = data.vlans   || [];
+
+  // Rückwärtskompatibilität: fehlende Portfelder ergänzen
+  state.devices.forEach(d => {
+    d.ports.forEach(p => {
+      // uid sicherstellen (SFP-Ports bekommen 100+id falls uid fehlt)
+      if (p.uid === undefined) {
+        p.uid = p.type === 'sfp' ? 100 + p.id : p.id;
+      }
+      if (p.speed       === undefined) p.speed       = p.type === 'sfp' ? '10G' : '1G';
+      if (p.mode        === undefined) p.mode        = 'disabled';
+      if (p.accessVlan  === undefined) p.accessVlan  = 1;
+      if (p.taggedVlans === undefined) p.taggedVlans = [];
+      if (p.nativeVlan  === undefined) p.nativeVlan  = 1;
+      if (p.label       === undefined) p.label       = '';
+      if (p.notes       === undefined) p.notes       = '';
+    });
+  });
+
+  markSaved();
+  updateProjectDisplay();
+  renderVlanPanel();
+  renderAllDevices();
+  renderPatchTable();
+  updateEmptyState();
+}
+
+// ============================================================
+// SPEICHERN — Dialog
+// ============================================================
+function saveProjectDialog() {
+  if (!state.projectCreated) {
+    showToast('Kein aktives Projekt.', 'warning');
+    return;
+  }
+  // FileSystem Access API: direktes Speichern wenn Handle vorhanden
+  if (fileHandle) {
+    saveToFileHandle();
+    return;
+  }
+  // Kein Handle → Dialog anzeigen
+  const body = document.getElementById('saveModalBody');
+  body.innerHTML = '';
+
+  if ('showSaveFilePicker' in window) {
+    const opt1 = makeSaveOption('💾', 'In Datei speichern', 'Überschreibt die aktuell geöffnete Datei oder wählt eine neue.', () => {
+      closeModal('saveModal');
+      saveWithFilePicker();
+    });
+    body.appendChild(opt1);
+  }
+
+  const opt2 = makeSaveOption('⬇', 'Download', 'Speichert die Datei als Download (Backup).', () => {
+    closeModal('saveModal');
+    downloadProject();
+  });
+  body.appendChild(opt2);
+
+  openModal('saveModal');
+}
+
+function saveProjectAs() {
+  if (!state.projectCreated) { showToast('Kein aktives Projekt.', 'warning'); return; }
+  if ('showSaveFilePicker' in window) {
+    saveWithFilePicker(true);
+  } else {
+    downloadProject();
+  }
+}
+
+function makeSaveOption(icon, label, desc, handler) {
+  const div = document.createElement('div');
+  div.className = 'save-option';
+  div.innerHTML = `
+    <div class="save-option-icon">${icon}</div>
+    <div class="save-option-text">
+      <strong>${label}</strong>
+      <span>${desc}</span>
+    </div>
+  `;
+  div.onclick = handler;
+  return div;
+}
+
+async function saveWithFilePicker(forceNew = false) {
+  try {
+    if (!fileHandle || forceNew) {
+      fileHandle = await window.showSaveFilePicker({
+        suggestedName: sanitizeFilename(state.projectName) + '.json',
+        types: [{ description: 'Netzwerkpatch JSON', accept: { 'application/json': ['.json'] } }],
+      });
+    }
+    await saveToFileHandle();
+  } catch (e) {
+    if (e.name !== 'AbortError') showToast('Speichern fehlgeschlagen.', 'error');
+  }
+}
+
+async function saveToFileHandle() {
+  if (!fileHandle) { downloadProject(); return; }
+  try {
+    const writable = await fileHandle.createWritable();
+    await writable.write(JSON.stringify(buildSaveData(), null, 2));
+    await writable.close();
+    markSaved();
+    showToast('Gespeichert.', 'success', 1800);
+  } catch {
+    showToast('Speichern fehlgeschlagen.', 'error');
+  }
+}
+
+function downloadProject() {
+  const json = JSON.stringify(buildSaveData(), null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = sanitizeFilename(state.projectName) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  markSaved();
+  showToast('Datei heruntergeladen.', 'success', 1800);
+}
+
+function sanitizeFilename(name) {
+  return (name || 'netzwerkpatch').replace(/[^a-zA-Z0-9_\-äöüÄÖÜß ]/g, '').replace(/\s+/g, '_');
+}
+
+// ============================================================
+// DRUCKEN
+// ============================================================
+function exportPrint() {
+  if (state.devices.length === 0) {
+    showToast('Keine Geräte vorhanden.', 'warning');
+    return;
+  }
+
+  const dateStr  = new Date().toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+  const projName = escHtml(state.projectName || 'Unbenannt');
+
+  let rows = '';
+  state.devices.forEach(dev => {
+    const rj45Ports = dev.ports.filter(p => p.type === 'rj45');
+    const sfpPorts  = dev.ports.filter(p => p.type === 'sfp');
+    const allPorts  = [...rj45Ports, ...sfpPorts];
+
+    allPorts.forEach((port, idx) => {
+      const prefix  = port.type === 'sfp' ? 'S' : 'P';
+      const portNum = prefix + String(port.id).padStart(2,'0');
+      let vlanInfo  = '—';
+      if (port.mode === 'access') {
+        const vlan = getVlan(port.accessVlan);
+        vlanInfo = vlan ? vlan.id + ' ' + vlan.name : '—';
+      } else if (port.mode === 'trunk') {
+        const native = getVlan(port.nativeVlan);
+        const tagged = port.taggedVlans.map(id => id).join(', ');
+        vlanInfo = (native ? 'N:' + native.id : '') + (tagged ? ' T:' + tagged : '');
+      }
+      rows += `<tr${idx===0?' class="first-of-device"':''}>
+        ${idx===0 ? `<td class="td-device" rowspan="${allPorts.length}">${escHtml(dev.name)}</td>` : ''}
+        <td>${portNum}</td>
+        <td>${port.type.toUpperCase()}</td>
+        <td>${escHtml(port.label||'')}</td>
+        <td>${port.mode.toUpperCase()}</td>
+        <td>${vlanInfo}</td>
+        <td>${port.speed||'—'}</td>
+        <td>${escHtml(port.notes||'')}</td>
+      </tr>`;
+    });
+  });
+
+  const printHtml = `<!DOCTYPE html>
+<html lang="de"><head><meta charset="UTF-8">
+<title>NETZWERKPATCH — ${projName}</title>
+<style>
+body { font-family: 'Barlow Condensed', Arial, sans-serif; font-size: 11pt; color: #111; margin: 20px; }
+h1 { font-size: 24pt; letter-spacing: 4px; margin-bottom: 4px; }
+.meta { color: #666; font-size: 9pt; margin-bottom: 16px; }
+table { border-collapse: collapse; width: 100%; }
+th { background: #1c2030; color: #e8c84a; text-transform: uppercase; font-size: 8pt; letter-spacing: 1.5px; padding: 6px 10px; text-align: left; }
+td { border-bottom: 1px solid #ddd; padding: 5px 10px; font-size: 10pt; }
+.td-device { font-weight: 700; background: #f6f7fa; vertical-align: top; padding-top: 8px; }
+tr.first-of-device td { border-top: 2px solid #aaa; }
+@media print { body { margin: 10px; } }
+</style></head>
+<body>
+<h1>NETZWERKPATCH</h1>
+<div class="meta">Projekt: ${projName} · Gedruckt: ${dateStr}</div>
+<table>
+  <thead><tr><th>Gerät</th><th>Port</th><th>Typ</th><th>Label</th><th>Modus</th><th>VLAN</th><th>Speed</th><th>Notizen</th></tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+</body></html>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(printHtml);
+  w.document.close();
+  w.focus();
+  setTimeout(() => w.print(), 300);
+}
+
+// ============================================================
+// LEEREN
+// ============================================================
+function clearAll() {
+  if (!state.projectCreated) return;
+  if (!confirm('Alle Geräte und VLANs löschen? (Das Projekt bleibt erhalten.)')) return;
+  state.devices = [];
+  state.vlans   = [];
+  fileHandle    = null;
+  markModified();
+  renderAllDevices();
+  renderVlanPanel();
+  renderPatchTable();
+  showToast('Projekt geleert.', 'info');
+}
+
+// ===== js/main.js =====
+// ============================================================
+// 14. INITIALISIERUNG
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  // Version anzeigen
+  const versionEl = document.getElementById('appVersionDisplay');
+  if (versionEl) versionEl.textContent = APP_VERSION;
+
+  // Leeres Projekt → Empty State
+  updateEmptyState();
+  updateProjectDisplay();
+
+  // Auto-Save aus localStorage wiederherstellen (optional)
+  // const saved = localStorage.getItem('netzwerkpatch_autosave');
+  // if (saved) { try { loadProjectData(JSON.parse(saved)); } catch {} }
+
+  console.log('NETZWERKPATCH', APP_VERSION, '— bereit.');
+});
+
+</script>
+
+</body>
+</html>

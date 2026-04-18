@@ -1,0 +1,92 @@
+/* === 0. Global Scale === */
+html { zoom: 1.2; }
+
+/* === 1. Reset & Variables === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --font-header:  'Bebas Neue', sans-serif;
+  --font-ui:      'Barlow Condensed', sans-serif;
+  --font-mono:    'Share Tech Mono', monospace;
+
+  /* App Shell */
+  --app-bg:        #0d0f14;
+  --sidebar-bg:    #141720;
+  --sidebar-hover: rgba(232,200,74,.06);
+  --sidebar-active:rgba(232,200,74,.14);
+  --header-bg:     #0a0c14;
+  --header-border: #e8c84a;
+  --header-text:   #c8d0e8;
+
+  /* Accent */
+  --accent:        #e8c84a;
+  --accent-dim:    #c8a832;
+  --accent-green:  #4ae8a0;
+  --accent-red:    #e84a4a;
+  --accent-orange: #e8a04a;
+
+  /* Rack Device */
+  --rack-bg:       #1c2030;
+  --rack-face:     #141720;
+  --rack-border:   #2a3050;
+  --rack-ear:      #1c2030;
+  --rack-screw:    #3a4060;
+  --rack-stripe:   #1a1f30;
+
+  /* RJ45 Ports */
+  --rj45-body:     #888888;
+  --rj45-ring:     #AAAAAA;
+  --rj45-inner:    #0d0f14;
+  --rj45-pin:      #cccccc;
+
+  /* SFP Ports */
+  --sfp-body:      #666666;
+  --sfp-inner:     #0a0c14;
+
+  /* LED */
+  --led-on:        #4ae8a0;
+  --led-glow:      rgba(74,232,160,0.5);
+  --led-off:       #0d2018;
+  --led-off-ring:  #1a3028;
+
+  /* Retro Lamps */
+  --lamp-in1:       #e8a04a;
+  --lamp-in1-glow:  rgba(232,160,74,0.7);
+  --lamp-in2:       #4a90e8;
+  --lamp-in2-glow:  rgba(74,144,232,0.7);
+  --lamp-off-cap:   #1a1a22;
+  --lamp-filament:  rgba(255,240,180,0.92);
+
+  /* Text */
+  --text-primary:  #c8d0e8;
+  --text-secondary:#5a6080;
+  --text-mono:     #e8c84a;
+  --text-label:    #8a94b0;
+
+  /* Sidebar width */
+  --sidebar-w:     200px;
+  --header-h:      64px;
+
+  /* 7-Segment — VFD/Nixie Röhren-Stil */
+  --seg-on:        #ffb200;
+  --seg-on-glow:   rgba(255,178,0,0.95);
+  --seg-off:       rgba(35,12,0,0.22);
+
+  /* VLAN Farb-Palette (16 distinkte Farben) */
+  --vlan-c1:  #4a90e8;   /* blau        */
+  --vlan-c2:  #4ae8a0;   /* grün        */
+  --vlan-c3:  #e8a04a;   /* orange      */
+  --vlan-c4:  #e84a9f;   /* magenta     */
+  --vlan-c5:  #a04ae8;   /* lila        */
+  --vlan-c6:  #e8e84a;   /* gelb        */
+  --vlan-c7:  #4ae8e8;   /* cyan        */
+  --vlan-c8:  #e84a4a;   /* rot         */
+  --vlan-c9:  #4a6ee8;   /* indigo      */
+  --vlan-c10: #88e84a;   /* hellgrün    */
+  --vlan-c11: #e8604a;   /* koralle     */
+  --vlan-c12: #c84ae8;   /* violett     */
+  --vlan-c13: #4ae8c8;   /* türkis      */
+  --vlan-c14: #e8b44a;   /* bernstein   */
+  --vlan-c15: #8ae84a;   /* limette     */
+  --vlan-c16: #e84a74;   /* rosa-rot    */
+}
