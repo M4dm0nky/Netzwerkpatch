@@ -25,12 +25,15 @@ const VLAN_PRESETS = [
 // VLAN CRUD
 // ============================================================
 function openNewVlanModal(editId) {
+  if (editId === 1) {
+    showToast('Management-VLAN kann nicht bearbeitet werden.', 'warning');
+    return;
+  }
   const modal = document.getElementById('vlanModal');
   const title = document.getElementById('vlanModalTitle');
   const idEl  = document.getElementById('vlanIdInput');
   const nameEl = document.getElementById('vlanNameInput');
   const colorEl = document.getElementById('vlanColorInput');
-  const descEl = document.getElementById('vlanDescInput');
   const idField = document.getElementById('vlanIdField');
 
   if (editId != null) {
@@ -41,7 +44,6 @@ function openNewVlanModal(editId) {
     if (idEl)   { idEl.value = vlan.id; idEl.disabled = true; }
     if (nameEl)  nameEl.value = vlan.name;
     if (colorEl) { colorEl.value = vlan.color; updateColorPreview(vlan.color); }
-    if (descEl)  descEl.value = vlan.description || '';
     modal.dataset.editId = editId;
   } else {
     // Neu
@@ -50,7 +52,6 @@ function openNewVlanModal(editId) {
     if (nameEl)  nameEl.value = '';
     const presetColor = VLAN_PRESETS[(state.vlans.length) % VLAN_PRESETS.length];
     if (colorEl) { colorEl.value = presetColor; updateColorPreview(presetColor); }
-    if (descEl)  descEl.value = '';
     delete modal.dataset.editId;
   }
   if (idField) idField.classList.remove('has-error');
@@ -72,14 +73,12 @@ function confirmVlan() {
   const idEl   = document.getElementById('vlanIdInput');
   const nameEl = document.getElementById('vlanNameInput');
   const colorEl = document.getElementById('vlanColorInput');
-  const descEl = document.getElementById('vlanDescInput');
   const idField = document.getElementById('vlanIdField');
   const nameField = document.getElementById('vlanNameField');
 
   const id    = parseInt(idEl?.value || 0);
   const name  = nameEl?.value.trim() || '';
   const color = colorEl?.value || '#4a90e8';
-  const desc  = descEl?.value.trim() || '';
 
   let hasError = false;
   if (!name) {
@@ -110,7 +109,7 @@ function confirmVlan() {
       showToast('VLAN ' + vlan.id + ' aktualisiert.', 'success');
     }
   } else {
-    state.vlans.push({ id, name, color, description: desc });
+    state.vlans.push({ id, name, color });
     state.vlans.sort((a,b) => a.id - b.id);
     showToast('VLAN ' + id + ' angelegt.', 'success');
   }
@@ -128,6 +127,10 @@ function confirmVlan() {
 }
 
 function deleteVlan(id) {
+  if (id === 1) {
+    showToast('Management-VLAN kann nicht gelöscht werden.', 'warning');
+    return;
+  }
   const vlan = getVlan(id);
   if (!vlan) return;
   // Prüfen ob Ports dieses VLAN nutzen
@@ -184,6 +187,35 @@ function renderVlanPanel() {
   const sep = document.createElement('div');
   sep.className = 'vlan-panel-sep';
   panel.appendChild(sep);
+
+  // Fester Trunk-Eintrag (kein VLAN-ID, alle VLANs gehen durch)
+  const trunkEntry = document.createElement('div');
+  trunkEntry.className = 'vlan-entry';
+  trunkEntry.draggable = true;
+  trunkEntry.title = 'TRUNK — Alle VLANs\nZiehen → Port auf Trunk setzen';
+  trunkEntry.dataset.vlanId = '__trunk__';
+  trunkEntry.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('vlanId', '__trunk__');
+    e.dataTransfer.effectAllowed = 'link';
+  });
+  const trunkDot = document.createElement('div');
+  trunkDot.className = 'vlan-entry-dot';
+  trunkDot.style.background = '#808080';
+  trunkDot.style.boxShadow = '0 0 4px #80808080';
+  const trunkName = document.createElement('div');
+  trunkName.className = 'vlan-entry-name';
+  trunkName.textContent = 'Trunk';
+  const trunkLbl = document.createElement('div');
+  trunkLbl.className = 'vlan-entry-id';
+  trunkLbl.textContent = 'ALL';
+  trunkEntry.appendChild(trunkDot);
+  trunkEntry.appendChild(trunkName);
+  trunkEntry.appendChild(trunkLbl);
+  panel.appendChild(trunkEntry);
+
+  const sep2 = document.createElement('div');
+  sep2.className = 'vlan-panel-sep';
+  panel.appendChild(sep2);
 
   state.vlans.forEach(vlan => {
     const entry = document.createElement('div');
@@ -262,8 +294,11 @@ function renderVlanManagerTab() {
       <td class="vlan-td-ports">${portCount > 0 ? portCount + '×' : '—'}</td>
       <td class="vlan-td-desc">${escHtml(vlan.description || '')}</td>
       <td class="vlan-td-actions">
-        <button class="vlan-action-btn" onclick="openNewVlanModal(${vlan.id})">Bearbeiten</button>
-        <button class="vlan-action-btn danger" onclick="deleteVlan(${vlan.id})">Löschen</button>
+        ${vlan.id === 1
+          ? '<span style="font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);letter-spacing:0.5px;">🔒 System</span>'
+          : `<button class="vlan-action-btn" onclick="openNewVlanModal(${vlan.id})">Bearbeiten</button>
+             <button class="vlan-action-btn danger" onclick="deleteVlan(${vlan.id})">Löschen</button>`
+        }
       </td>
     `;
     tbody.appendChild(tr);
@@ -326,11 +361,11 @@ function openVlanPopover(deviceId, portId, anchorEl) {
       <div class="pop-mode-group">
         <label class="pop-mode-opt">
           <input type="radio" name="popMode" value="disabled" ${port.mode==='disabled'?'checked':''}>
-          <span>Deaktiviert</span>
+          <span>Status</span>
         </label>
         <label class="pop-mode-opt">
           <input type="radio" name="popMode" value="access" ${port.mode==='access'?'checked':''}>
-          <span>Access</span>
+          <span>VLAN</span>
         </label>
         <label class="pop-mode-opt">
           <input type="radio" name="popMode" value="trunk" ${port.mode==='trunk'?'checked':''}>

@@ -79,7 +79,7 @@ function confirmNewProject() {
   renderVlanPanel();
   // Standardmäßig VLAN 1 anlegen
   if (state.vlans.length === 0) {
-    state.vlans.push({ id: 1, name: 'Management', color: '#0066ff', description: 'Management-VLAN' });
+    state.vlans.push({ id: 1, name: 'Management', color: '#0066ff' });
     renderVlanPanel();
   }
   showToast('Neues Projekt angelegt: ' + name, 'success');

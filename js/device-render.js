@@ -239,10 +239,16 @@ function buildRJ45Port(device, port) {
   wrap.addEventListener('drop', e => {
     e.preventDefault();
     wrap.classList.remove('drag-over');
-    const vlanId = parseInt(e.dataTransfer.getData('vlanId'));
-    if (vlanId) {
-      updatePortVlan(device.id, uid, 'access', vlanId, [], vlanId);
-      showToast('VLAN ' + vlanId + ' auf Port ' + port.id + ' gesetzt.', 'success', 1800);
+    const raw = e.dataTransfer.getData('vlanId');
+    if (raw === '__trunk__') {
+      updatePortVlan(device.id, uid, 'trunk', port.accessVlan, port.taggedVlans, port.nativeVlan, port.speed, port.label, port.notes);
+      showToast('Port ' + port.id + ' auf TRUNK gesetzt.', 'success', 1800);
+    } else {
+      const vlanId = parseInt(raw);
+      if (vlanId) {
+        updatePortVlan(device.id, uid, 'access', vlanId, [], vlanId);
+        showToast('VLAN ' + vlanId + ' auf Port ' + port.id + ' gesetzt.', 'success', 1800);
+      }
     }
   });
 
@@ -313,10 +319,16 @@ function buildSFPPort(device, port) {
   wrap.addEventListener('drop', e => {
     e.preventDefault();
     wrap.classList.remove('drag-over');
-    const vlanId = parseInt(e.dataTransfer.getData('vlanId'));
-    if (vlanId) {
-      updatePortVlan(device.id, uid, 'access', vlanId, [], vlanId);
-      showToast('VLAN ' + vlanId + ' auf SFP ' + port.id + ' gesetzt.', 'success', 1800);
+    const raw = e.dataTransfer.getData('vlanId');
+    if (raw === '__trunk__') {
+      updatePortVlan(device.id, uid, 'trunk', port.accessVlan, port.taggedVlans, port.nativeVlan, port.speed, port.label, port.notes);
+      showToast('SFP ' + port.id + ' auf TRUNK gesetzt.', 'success', 1800);
+    } else {
+      const vlanId = parseInt(raw);
+      if (vlanId) {
+        updatePortVlan(device.id, uid, 'access', vlanId, [], vlanId);
+        showToast('VLAN ' + vlanId + ' auf SFP ' + port.id + ' gesetzt.', 'success', 1800);
+      }
     }
   });
 
