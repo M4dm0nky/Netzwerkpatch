@@ -1286,9 +1286,6 @@ body {
   width: 300px;
   box-shadow: 0 12px 40px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.04);
   animation: popoverIn 0.15s ease-out;
-  max-height: calc(100vh - 32px);
-  display: flex;
-  flex-direction: column;
 }
 
 @keyframes popoverIn {
@@ -1329,8 +1326,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  overflow-y: auto;
-  flex: 1;
 }
 
 .vlan-pop-row {
@@ -1420,116 +1415,6 @@ body {
   font-size: 12px;
   padding: 6px 16px;
 }
-
-/* === Custom VLAN Select (vcs) === */
-.vcs-wrap {
-  position: relative;
-  width: 100%;
-}
-.vcs-trigger {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #0a0c14;
-  border: 1px solid #2a3050;
-  color: var(--text-primary);
-  font-family: var(--font-ui);
-  font-size: 14px;
-  font-weight: 600;
-  padding: 6px 10px;
-  cursor: pointer;
-  width: 100%;
-  transition: border-color 0.15s;
-  user-select: none;
-}
-.vcs-trigger:focus, .vcs-trigger:hover { border-color: var(--accent); outline: none; }
-.vcs-trigger.open { border-color: var(--accent); }
-.vcs-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.vcs-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.vcs-arrow { color: var(--text-secondary); font-size: 10px; flex-shrink: 0; }
-.vcs-list {
-  display: none;
-  position: fixed;
-  z-index: 700;
-  background: #0d1117;
-  border: 1px solid var(--accent);
-  max-height: 160px;
-  overflow-y: auto;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.7);
-}
-.vcs-list.open { display: block; }
-.vcs-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  cursor: pointer;
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  transition: background 0.1s;
-}
-.vcs-item:hover { background: rgba(255,255,255,0.06); }
-.vcs-item.selected { color: var(--accent); background: rgba(232,200,74,0.07); }
-.vcs-addnew {
-  color: var(--accent);
-  border-top: 1px solid #1e2535;
-  font-size: 12px;
-  letter-spacing: 0.5px;
-}
-.vcs-addnew:hover { background: rgba(232,200,74,0.1); }
-
-/* Custom Multi-Select für Tagged VLANs */
-.vcs-multi {
-  background: #0a0c14;
-  border: 1px solid #2a3050;
-  max-height: 120px;
-  overflow-y: auto;
-  transition: border-color 0.15s;
-}
-.vcs-multi:focus-within { border-color: var(--accent); }
-.vcs-multi-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 10px;
-  cursor: pointer;
-}
-.vcs-multi-item:hover { background: rgba(255,255,255,0.04); }
-.vcs-multi-item input[type="checkbox"] {
-  accent-color: var(--accent);
-  width: 13px;
-  height: 13px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-.vcs-multi-item label {
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  cursor: pointer;
-  flex: 1;
-}
-.vcs-multi-addnew {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  border-top: 1px solid #1e2535;
-  font-family: var(--font-ui);
-  font-size: 12px;
-  color: var(--accent);
-  cursor: pointer;
-  letter-spacing: 0.5px;
-}
-.vcs-multi-addnew:hover { background: rgba(232,200,74,0.1); }
 
     /* ===== css/modal.css ===== */
 /* === Modal System === */
@@ -1893,7 +1778,7 @@ body {
     <div style="display:flex;align-items:center;gap:12px;">
       <div>
         <h1 class="app-title">NETZWERK<span>PATCH</span></h1>
-        <div class="app-version" id="appVersionDisplay">v0.1.0</div>
+        <div class="app-version" id="appVersionDisplay">v0.1.2</div>
       </div>
     </div>
   </div>
@@ -2146,7 +2031,7 @@ body {
 // ===== js/state.js =====
 'use strict';
 
-const APP_VERSION = 'v0.1.0';
+const APP_VERSION = 'v0.1.2';
 
 // ============================================================
 // 1. STATE
@@ -3537,6 +3422,7 @@ function buildVcsSelect(hiddenId, vlans, selectedId) {
   trigger.addEventListener('click', e => {
     e.stopPropagation();
     const wasOpen = list.classList.contains('open');
+    // Alle anderen offenen Listen schließen
     document.querySelectorAll('.vcs-list.open, .vcs-trigger.open').forEach(el => el.classList.remove('open'));
     if (!wasOpen) {
       const rect = trigger.getBoundingClientRect();
@@ -3606,12 +3492,17 @@ function buildVcsMulti(containerId, vlans, selectedIds) {
 // Aktualisiert alle VLAN-Dropdowns im offenen Popover nach VLAN-Erstellung
 function refreshPopoverVlanLists() {
   if (!currentPopover) return;
+  // Einzelauswahl-Wraps neu aufbauen
   currentPopover.querySelectorAll('.vcs-wrap').forEach(wrap => {
     if (wrap._rebuildItems) wrap._rebuildItems();
   });
+  // Multi-Wrap neu aufbauen (selectedIds aus aktuellen Checkboxen lesen)
   const multiWrap = currentPopover.querySelector('.vcs-multi');
   if (multiWrap && multiWrap._rebuildItems) {
+    // aktuelle Auswahl sichern
     const checked = Array.from(multiWrap.querySelectorAll('.vcs-multi-cb:checked')).map(cb => parseInt(cb.value));
+    // Funktion ist closure, braucht neue selectedIds – wir rufen direkt rebuild auf
+    // und setzen danach die vorherigen + neue VLAN wieder
     multiWrap._rebuildItems();
     multiWrap.querySelectorAll('.vcs-multi-cb').forEach(cb => {
       if (checked.includes(parseInt(cb.value))) cb.checked = true;
