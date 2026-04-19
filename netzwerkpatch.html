@@ -1308,6 +1308,9 @@ body {
   border: 1px solid #333;
   border-top: 2px solid var(--accent);
   width: 300px;
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 12px 40px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.04);
   animation: popoverIn 0.15s ease-out;
 }
@@ -1350,6 +1353,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .vlan-pop-row {
@@ -1988,7 +1994,7 @@ body {
     <div style="display:flex;align-items:center;gap:12px;">
       <div>
         <h1 class="app-title">NETZWERK<span>PATCH</span></h1>
-        <div class="app-version" id="appVersionDisplay">v0.2.7</div>
+        <div class="app-version" id="appVersionDisplay">v0.2.8</div>
       </div>
     </div>
   </div>
@@ -2265,7 +2271,7 @@ body {
 // ===== js/state.js =====
 'use strict';
 
-const APP_VERSION = 'v0.2.7';
+const APP_VERSION = 'v0.2.8';
 
 // ============================================================
 // 1. STATE
