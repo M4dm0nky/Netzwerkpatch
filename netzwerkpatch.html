@@ -3569,8 +3569,17 @@ function openVlanPopover(deviceId, portId, anchorEl) {
     updateColorRow(colorRow, vlanId);
     updatePopoverMode();
   }));
+  // Trunk: Tagged VLANs (VLANs 2–12)
+  const taggedVlans = state.vlans.filter(v => v.id >= 2 && v.id <= 12);
+  const taggedRow = document.createElement('div');
+  taggedRow.className = 'vlan-pop-row';
+  taggedRow.id = 'popTaggedRow';
+  taggedRow.innerHTML = '<label class="vlan-pop-label">TAGGED VLANS</label>';
+  taggedRow.appendChild(buildVcsMulti('popTaggedVlans', taggedVlans, port.taggedVlans));
+
   body.appendChild(vlanRow);
   body.appendChild(colorRow);
+  body.appendChild(taggedRow);
 
   // Label
   const labelRow = document.createElement('div');
@@ -3873,14 +3882,15 @@ function updatePopoverMode() {
   const vlanRow  = document.getElementById('popVlanRow');
   const colorRow = document.getElementById('popColorRow');
 
+  const selId = parseInt(document.getElementById('popVlanSelect')?.value || -1);
+
   if (vlanRow) vlanRow.style.display = mode === 'vlan' ? '' : 'none';
   if (colorRow) {
-    if (mode !== 'vlan') {
-      colorRow.style.display = 'none';
-    } else {
-      const selId = parseInt(document.getElementById('popVlanSelect')?.value || 0);
-      colorRow.style.display = (selId >= 2 && selId <= 12) ? '' : 'none';
-    }
+    colorRow.style.display = (mode === 'vlan' && selId >= 2 && selId <= 12) ? '' : 'none';
+  }
+  const taggedRow = document.getElementById('popTaggedRow');
+  if (taggedRow) {
+    taggedRow.style.display = (mode === 'vlan' && selId === 0) ? '' : 'none';
   }
 }
 
@@ -3940,7 +3950,9 @@ function saveVlanPopover() {
     if (selId === 0) {
       mode   = 'trunk';
       access = port.accessVlan;
-      tagged = port.taggedVlans.length ? port.taggedVlans : [];
+      tagged = Array.from(
+        document.querySelectorAll('#popTaggedVlans .vcs-multi-cb:checked')
+      ).map(cb => parseInt(cb.value));
       native = port.nativeVlan || 1;
     } else {
       mode   = 'access';
