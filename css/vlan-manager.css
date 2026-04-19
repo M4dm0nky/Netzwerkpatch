@@ -131,7 +131,6 @@
   max-height: calc(100vh - 16px);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   box-shadow: 0 12px 40px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.04);
   animation: popoverIn 0.15s ease-out;
 }
