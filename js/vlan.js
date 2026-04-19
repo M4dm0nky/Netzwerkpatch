@@ -791,34 +791,37 @@ function updatePopoverMode() {
 }
 
 function positionPopover(pop, anchor) {
-  pop.style.position   = 'fixed';
-  pop.style.zIndex     = '600';
-  pop.style.visibility = 'hidden';
-  requestAnimationFrame(() => {
-    const rect = anchor.getBoundingClientRect();
-    const pw   = pop.offsetWidth || 300;
+  const rect = anchor.getBoundingClientRect();
+  const pw   = 300;
+  const vh   = window.innerHeight;
+  const vw   = window.innerWidth;
 
-    let left = rect.left;
-    if (left + pw > window.innerWidth - 16) left = window.innerWidth - pw - 16;
-    if (left < 8) left = 8;
+  let left = rect.left;
+  if (left + pw > vw - 16) left = vw - pw - 16;
+  if (left < 8) left = 8;
 
-    const spaceBelow = window.innerHeight - rect.bottom - 8 - 16;
-    const spaceAbove = rect.top - 8 - 8;
-    let top, maxH;
+  const spaceBelow = vh - rect.bottom - 8 - 16;
+  const spaceAbove = rect.top - 8 - 16;
+  let top, maxH;
 
-    if (spaceBelow >= spaceAbove) {
-      top  = rect.bottom + 8;
-      maxH = spaceBelow;
-    } else {
-      maxH = spaceAbove;
-      top  = rect.top - 8 - maxH;
-    }
+  if (spaceBelow >= spaceAbove) {
+    top  = rect.bottom + 8;
+    maxH = Math.max(spaceBelow, 0);
+  } else {
+    maxH = Math.max(spaceAbove, 0);
+    top  = rect.top - 8 - maxH;
+  }
 
-    pop.style.maxHeight  = maxH + 'px';
-    pop.style.top        = top  + 'px';
-    pop.style.left       = left + 'px';
-    pop.style.visibility = 'visible';
-  });
+  if (maxH < 120) {
+    top  = 8;
+    maxH = vh - 16;
+  }
+
+  pop.style.position  = 'fixed';
+  pop.style.zIndex    = '600';
+  pop.style.maxHeight = maxH + 'px';
+  pop.style.top       = top  + 'px';
+  pop.style.left      = left + 'px';
 }
 
 function outsidePopoverClick(e) {
