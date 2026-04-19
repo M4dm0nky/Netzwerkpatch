@@ -361,58 +361,114 @@ function openVlanPopover(deviceId, portId, anchorEl) {
   const body = document.createElement('div');
   body.className = 'vlan-pop-body';
 
-  // Modus: "vlan" = access oder trunk (je nach VLAN-ID-Auswahl)
-  // ID 0 = Trunk, ID 1-12 = Access-VLAN
-  const modeIsVlan = port.mode === 'access' || port.mode === 'trunk';
-  const initialVlanId = port.mode === 'trunk' ? 0 : (port.accessVlan || 1);
-  const vlanOptions = [
-    { id: 0, name: 'Trunk', color: '#777777' },
-    ...state.vlans.filter(v => v.id >= 1 && v.id <= 12)
-  ];
-
-  body.innerHTML = `
-    <div class="vlan-pop-row">
-      <label class="vlan-pop-label">MODUS</label>
-      <div class="pop-mode-group">
-        <label class="pop-mode-opt">
-          <input type="radio" name="popMode" value="disabled" ${!modeIsVlan?'checked':''}>
-          <span>Status</span>
-        </label>
-        <label class="pop-mode-opt">
-          <input type="radio" name="popMode" value="vlan" ${modeIsVlan?'checked':''}>
-          <span>VLAN</span>
-        </label>
-      </div>
+  // Modus: disabled | access | trunk
+  const modeRow = document.createElement('div');
+  modeRow.className = 'vlan-pop-row';
+  modeRow.innerHTML = `
+    <label class="vlan-pop-label">MODUS</label>
+    <div class="pop-mode-group">
+      <label class="pop-mode-opt">
+        <input type="radio" name="popMode" value="disabled" ${port.mode === 'disabled' ? 'checked' : ''}>
+        <span>Inaktiv</span>
+      </label>
+      <label class="pop-mode-opt">
+        <input type="radio" name="popMode" value="access" ${port.mode === 'access' ? 'checked' : ''}>
+        <span>Access</span>
+      </label>
+      <label class="pop-mode-opt">
+        <input type="radio" name="popMode" value="trunk" ${port.mode === 'trunk' ? 'checked' : ''}>
+        <span>Trunk</span>
+      </label>
     </div>
   `;
+  body.appendChild(modeRow);
 
-  // Farbzeile vorab erzeugen (wird von VCS-onChange referenziert)
+  // === ACCESS SECTION ===
+  const accessSection = document.createElement('div');
+  accessSection.id = 'popAccessSection';
+
+  // VLAN-Zeile mit [+]-Button
+  const vlanLabelRow = document.createElement('div');
+  vlanLabelRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;';
+  const vlanLabel = document.createElement('label');
+  vlanLabel.className = 'vlan-pop-label';
+  vlanLabel.textContent = 'VLAN';
+  const addBtn = document.createElement('button');
+  addBtn.type = 'button';
+  addBtn.className = 'pop-add-btn';
+  addBtn.textContent = '+ NEU';
+  vlanLabelRow.appendChild(vlanLabel);
+  vlanLabelRow.appendChild(addBtn);
+
+  // Farbzeile vorab erzeugen
   const colorRow = document.createElement('div');
   colorRow.className = 'vlan-pop-row';
   colorRow.id = 'popColorRow';
   colorRow.innerHTML = '<label class="vlan-pop-label">FARBE</label>';
-  colorRow.appendChild(buildColorRow(initialVlanId));
+  colorRow.appendChild(buildColorRow(port.accessVlan || 1));
 
-  // VLAN-Auswahl (ID 0 = Trunk, 1-12 = Access)
   const vlanRow = document.createElement('div');
   vlanRow.className = 'vlan-pop-row';
   vlanRow.id = 'popVlanRow';
-  vlanRow.innerHTML = '<label class="vlan-pop-label">VLAN</label>';
-  vlanRow.appendChild(buildVcsSelect('popVlanSelect', vlanOptions, initialVlanId, (vlanId) => {
+  vlanRow.appendChild(vlanLabelRow);
+  vlanRow.appendChild(buildVcsSelect('popVlanSelect', state.vlans, port.accessVlan || 1, (vlanId) => {
     updateColorRow(colorRow, vlanId);
     updatePopoverMode();
   }));
-  // Trunk: Tagged VLANs (VLANs 2–12)
-  const taggedVlans = state.vlans.filter(v => v.id >= 2 && v.id <= 12);
+  accessSection.appendChild(vlanRow);
+  accessSection.appendChild(colorRow);
+
+  // Inline VLAN Creator für Access-Modus
+  const accessCreator = buildInlineVlanCreator((newVlan) => {
+    refreshPopoverVlanLists();
+    const vlanWrap = document.getElementById('popVlanSelect')?.closest('.vcs-wrap');
+    if (vlanWrap?._selectById) vlanWrap._selectById(newVlan.id);
+    updateColorRow(colorRow, newVlan.id);
+    updatePopoverMode();
+    accessCreator.style.display = 'none';
+  });
+  accessCreator.style.display = 'none';
+  addBtn.addEventListener('click', () => {
+    accessCreator.style.display = accessCreator.style.display === 'none' ? '' : 'none';
+  });
+  accessSection.appendChild(accessCreator);
+  body.appendChild(accessSection);
+
+  // === TRUNK SECTION ===
+  const trunkSection = document.createElement('div');
+  trunkSection.id = 'popTrunkSection';
+
+  // Native VLAN
+  const nativeRow = document.createElement('div');
+  nativeRow.className = 'vlan-pop-row';
+  nativeRow.innerHTML = '<label class="vlan-pop-label">NATIVE VLAN</label>';
+  nativeRow.appendChild(buildVcsSelect('popNativeVlan', state.vlans, port.nativeVlan || 1));
+  trunkSection.appendChild(nativeRow);
+
+  // Tagged VLANs
   const taggedRow = document.createElement('div');
   taggedRow.className = 'vlan-pop-row';
   taggedRow.id = 'popTaggedRow';
   taggedRow.innerHTML = '<label class="vlan-pop-label">TAGGED VLANS</label>';
-  taggedRow.appendChild(buildVcsMulti('popTaggedVlans', taggedVlans, port.taggedVlans));
+  taggedRow.appendChild(buildVcsMulti('popTaggedVlans', state.vlans, port.taggedVlans));
+  trunkSection.appendChild(taggedRow);
 
-  body.appendChild(vlanRow);
-  body.appendChild(colorRow);
-  body.appendChild(taggedRow);
+  // [+] VLAN für Trunk
+  const trunkAddBtn = document.createElement('button');
+  trunkAddBtn.type = 'button';
+  trunkAddBtn.className = 'pop-add-btn pop-add-btn--full';
+  trunkAddBtn.textContent = '+ VLAN erstellen';
+  const trunkCreator = buildInlineVlanCreator((newVlan) => {
+    refreshPopoverVlanLists();
+    trunkCreator.style.display = 'none';
+  });
+  trunkCreator.style.display = 'none';
+  trunkAddBtn.addEventListener('click', () => {
+    trunkCreator.style.display = trunkCreator.style.display === 'none' ? '' : 'none';
+  });
+  trunkSection.appendChild(trunkAddBtn);
+  trunkSection.appendChild(trunkCreator);
+  body.appendChild(trunkSection);
 
   // Label
   const labelRow = document.createElement('div');
@@ -432,6 +488,19 @@ function openVlanPopover(deviceId, portId, anchorEl) {
   `;
   body.appendChild(notesRow);
 
+  // Speed
+  const speedRow = document.createElement('div');
+  speedRow.className = 'vlan-pop-row';
+  speedRow.innerHTML = `
+    <label class="vlan-pop-label">SPEED</label>
+    <select id="popSpeed" class="vlan-pop-select">
+      ${['100M','1G','2.5G','10G','25G'].map(s =>
+        `<option value="${s}"${port.speed === s ? ' selected' : ''}>${s}</option>`
+      ).join('')}
+    </select>
+  `;
+  body.appendChild(speedRow);
+
   pop.appendChild(body);
 
   // Footer
@@ -446,28 +515,23 @@ function openVlanPopover(deviceId, portId, anchorEl) {
   document.body.appendChild(pop);
   currentPopover = pop;
 
-  // Modus-Sichtbarkeit schalten
   updatePopoverMode();
   pop.querySelectorAll('input[name="popMode"]').forEach(r => {
     r.addEventListener('change', updatePopoverMode);
   });
 
-  // Klick innerhalb Popover aber außerhalb eines vcs-wrap → offene Dropdown-Listen schließen
   pop.addEventListener('click', e => {
     if (!e.target.closest('.vcs-wrap')) {
       pop.querySelectorAll('.vcs-list.open, .vcs-trigger.open').forEach(el => el.classList.remove('open'));
     }
   });
 
-  // Scroll im Body → offene fixed-Dropdowns schließen (Position wäre sonst falsch)
   body.addEventListener('scroll', () => {
     pop.querySelectorAll('.vcs-list.open, .vcs-trigger.open').forEach(el => el.classList.remove('open'));
   });
 
-  // Positionierung
   positionPopover(pop, anchorEl);
 
-  // Klick außerhalb → schließen
   setTimeout(() => {
     document.addEventListener('click', outsidePopoverClick, { once: false });
   }, 100);
@@ -598,6 +662,7 @@ function buildVcsSelect(hiddenId, vlans, selectedId, onChange) {
 
   buildItems();
   wrap._rebuildItems = () => buildItems();
+  wrap._selectById   = (id) => { selectVlan(vlans.find(v => v.id === id) || null); };
 
   wrap.appendChild(hidden);
   wrap.appendChild(trigger);
@@ -711,19 +776,17 @@ function refreshPopoverVlanLists() {
 }
 
 function updatePopoverMode() {
-  const mode     = document.querySelector('input[name="popMode"]:checked')?.value || 'disabled';
-  const vlanRow  = document.getElementById('popVlanRow');
-  const colorRow = document.getElementById('popColorRow');
+  const mode          = document.querySelector('input[name="popMode"]:checked')?.value || 'disabled';
+  const accessSection = document.getElementById('popAccessSection');
+  const trunkSection  = document.getElementById('popTrunkSection');
+  const colorRow      = document.getElementById('popColorRow');
 
-  const selId = parseInt(document.getElementById('popVlanSelect')?.value || -1);
+  if (accessSection) accessSection.style.display = mode === 'access' ? '' : 'none';
+  if (trunkSection)  trunkSection.style.display  = mode === 'trunk'  ? '' : 'none';
 
-  if (vlanRow) vlanRow.style.display = mode === 'vlan' ? '' : 'none';
   if (colorRow) {
-    colorRow.style.display = (mode === 'vlan' && selId >= 2 && selId <= 12) ? '' : 'none';
-  }
-  const taggedRow = document.getElementById('popTaggedRow');
-  if (taggedRow) {
-    taggedRow.style.display = (mode === 'vlan' && selId === 0) ? '' : 'none';
+    const selId = parseInt(document.getElementById('popVlanSelect')?.value || 0);
+    colorRow.style.display = (mode === 'access' && selId > 1) ? '' : 'none';
   }
 }
 
@@ -768,34 +831,29 @@ function saveVlanPopover() {
   const port = getPort(popoverDeviceId, popoverPortId);
   if (!port) return;
 
-  const modeRadio = document.querySelector('input[name="popMode"]:checked')?.value || 'disabled';
+  const mode  = document.querySelector('input[name="popMode"]:checked')?.value || 'disabled';
   const label = (document.getElementById('popLabel')?.value || '').trim();
   const notes = (document.getElementById('popNotes')?.value || '').trim();
+  const speed = document.getElementById('popSpeed')?.value || port.speed;
 
-  let mode, access, tagged, native;
-  if (modeRadio === 'disabled') {
-    mode   = 'disabled';
+  let access, tagged, native;
+  if (mode === 'access') {
+    access = parseInt(document.getElementById('popVlanSelect')?.value || port.accessVlan);
+    tagged = [];
+    native = port.nativeVlan || 1;
+  } else if (mode === 'trunk') {
+    access = port.accessVlan;
+    tagged = Array.from(
+      document.querySelectorAll('#popTaggedVlans .vcs-multi-cb:checked')
+    ).map(cb => parseInt(cb.value));
+    native = parseInt(document.getElementById('popNativeVlan')?.value || port.nativeVlan || 1);
+  } else {
     access = port.accessVlan;
     tagged = port.taggedVlans;
     native = port.nativeVlan;
-  } else {
-    const selId = parseInt(document.getElementById('popVlanSelect')?.value || 1);
-    if (selId === 0) {
-      mode   = 'trunk';
-      access = port.accessVlan;
-      tagged = Array.from(
-        document.querySelectorAll('#popTaggedVlans .vcs-multi-cb:checked')
-      ).map(cb => parseInt(cb.value));
-      native = port.nativeVlan || 1;
-    } else {
-      mode   = 'access';
-      access = selId;
-      tagged = [];
-      native = 1;
-    }
   }
 
-  updatePortVlan(popoverDeviceId, popoverPortId, mode, access, tagged, native, port.speed, label, notes);
+  updatePortVlan(popoverDeviceId, popoverPortId, mode, access, tagged, native, speed, label, notes);
 
   const colorChange = pendingVlanColor;
   closeVlanPopover();
@@ -809,6 +867,106 @@ function saveVlanPopover() {
       renderAllDevices();
     }
   }
+}
+
+// ---- Inline VLAN Creator (Schnell-Anlegen im Popover) ----
+function buildInlineVlanCreator(onCreated) {
+  const wrap = document.createElement('div');
+  wrap.className = 'pop-inline-creator';
+
+  const row1 = document.createElement('div');
+  row1.className = 'pop-inline-row';
+  row1.innerHTML = `
+    <div class="pop-inline-field">
+      <label class="vlan-pop-label">ID</label>
+      <input type="number" class="vlan-pop-input pop-inline-id" min="1" max="4094" placeholder="1–4094">
+    </div>
+    <div class="pop-inline-field pop-inline-field--grow">
+      <label class="vlan-pop-label">NAME</label>
+      <input type="text" class="vlan-pop-input pop-inline-name" maxlength="30" placeholder="z.B. Office">
+    </div>
+  `;
+  wrap.appendChild(row1);
+
+  const colorLabel = document.createElement('label');
+  colorLabel.className = 'vlan-pop-label';
+  colorLabel.textContent = 'FARBE';
+  wrap.appendChild(colorLabel);
+
+  let selectedColor = VLAN_PRESETS[0];
+  const colorDots = document.createElement('div');
+  colorDots.className = 'vcs-color-row';
+  VLAN_PRESETS.forEach((color, i) => {
+    const dot = document.createElement('span');
+    dot.className = 'vcs-color-dot' + (i === 0 ? ' active' : '');
+    dot.style.background = color;
+    dot.title = color;
+    dot.addEventListener('click', () => {
+      selectedColor = color;
+      colorDots.querySelectorAll('.vcs-color-dot').forEach(d => d.classList.remove('active'));
+      dot.classList.add('active');
+    });
+    colorDots.appendChild(dot);
+  });
+  wrap.appendChild(colorDots);
+
+  const errorEl = document.createElement('div');
+  errorEl.className = 'pop-inline-error';
+  errorEl.style.display = 'none';
+  wrap.appendChild(errorEl);
+
+  const btnRow = document.createElement('div');
+  btnRow.className = 'pop-inline-btns';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'btn-cancel';
+  cancelBtn.style.cssText = 'font-size:11px;padding:4px 10px;';
+  cancelBtn.textContent = 'Abbrechen';
+  cancelBtn.addEventListener('click', () => { wrap.style.display = 'none'; });
+
+  const createBtn = document.createElement('button');
+  createBtn.type = 'button';
+  createBtn.className = 'btn-primary';
+  createBtn.style.cssText = 'font-size:11px;padding:4px 12px;';
+  createBtn.textContent = 'Erstellen';
+  createBtn.addEventListener('click', () => {
+    const idInput   = wrap.querySelector('.pop-inline-id');
+    const nameInput = wrap.querySelector('.pop-inline-name');
+    const id   = parseInt(idInput.value);
+    const name = nameInput.value.trim();
+
+    if (!id || id < 1 || id > 4094) {
+      errorEl.textContent = 'Ungültige VLAN-ID (1–4094)';
+      errorEl.style.display = '';
+      return;
+    }
+    if (!name) {
+      errorEl.textContent = 'Name ist erforderlich';
+      errorEl.style.display = '';
+      return;
+    }
+    if (state.vlans.find(v => v.id === id)) {
+      errorEl.textContent = `VLAN ${id} existiert bereits`;
+      errorEl.style.display = '';
+      return;
+    }
+
+    errorEl.style.display = 'none';
+    const newVlan = { id, name, color: selectedColor, description: '' };
+    state.vlans.push(newVlan);
+    state.vlans.sort((a, b) => a.id - b.id);
+    markModified();
+    renderVlanPanel();
+    idInput.value   = '';
+    nameInput.value = '';
+    if (onCreated) onCreated(newVlan);
+  });
+
+  btnRow.appendChild(cancelBtn);
+  btnRow.appendChild(createBtn);
+  wrap.appendChild(btnRow);
+  return wrap;
 }
 
 // ============================================================

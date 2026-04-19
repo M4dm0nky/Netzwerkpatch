@@ -236,10 +236,57 @@
 }
 .pop-mode-opt span:hover { border-color: var(--text-secondary); color: var(--text-primary); }
 
-/* Multi-Select für Tagged VLANs */
-.tagged-vlan-select {
-  min-height: 80px;
-  font-size: 12px;
+/* [+] Button neben VLAN-Label */
+.pop-add-btn {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid var(--accent);
+  padding: 2px 7px;
+  border-radius: 2px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background 0.12s;
+}
+.pop-add-btn:hover { background: rgba(232,200,74,0.12); }
+.pop-add-btn--full { width: 100%; text-align: center; margin-top: 4px; }
+
+/* Inline VLAN Creator */
+.pop-inline-creator {
+  background: rgba(232,200,74,0.04);
+  border: 1px solid #2a3050;
+  border-left: 2px solid var(--accent);
+  border-radius: 3px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+.pop-inline-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.pop-inline-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.pop-inline-field--grow { flex: 1; }
+.pop-inline-id { width: 60px !important; }
+.pop-inline-btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.pop-inline-error {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent-red);
+  letter-spacing: 0.5px;
 }
 
 .vlan-pop-footer {
