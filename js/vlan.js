@@ -796,14 +796,25 @@ function positionPopover(pop, anchor) {
   pop.style.visibility = 'hidden';
   requestAnimationFrame(() => {
     const rect = anchor.getBoundingClientRect();
-    const pw = pop.offsetWidth  || 300;
-    const ph = pop.offsetHeight || 400;
+    const pw   = pop.offsetWidth || 300;
+
     let left = rect.left;
-    let top  = rect.bottom + 8;
-    if (left + pw > window.innerWidth  - 16) left = window.innerWidth  - pw - 16;
+    if (left + pw > window.innerWidth - 16) left = window.innerWidth - pw - 16;
     if (left < 8) left = 8;
-    if (top  + ph > window.innerHeight - 16) top  = rect.top - ph - 8;
-    if (top  < 8) top  = 8;
+
+    const spaceBelow = window.innerHeight - rect.bottom - 8 - 16;
+    const spaceAbove = rect.top - 8 - 8;
+    let top, maxH;
+
+    if (spaceBelow >= spaceAbove) {
+      top  = rect.bottom + 8;
+      maxH = spaceBelow;
+    } else {
+      maxH = spaceAbove;
+      top  = rect.top - 8 - maxH;
+    }
+
+    pop.style.maxHeight  = maxH + 'px';
     pop.style.top        = top  + 'px';
     pop.style.left       = left + 'px';
     pop.style.visibility = 'visible';
