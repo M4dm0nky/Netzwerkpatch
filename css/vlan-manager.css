@@ -259,3 +259,124 @@
   font-size: 12px;
   padding: 6px 16px;
 }
+
+/* ===================================================================
+   VCS — VLAN Custom Select (Combobox)
+   =================================================================== */
+.vcs-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.vcs-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  background: #0a0c14;
+  border: 1px solid #2a3050;
+  border-radius: 3px;
+  cursor: text;
+  min-height: 30px;
+  transition: border-color 0.15s;
+}
+.vcs-trigger.open { border-color: var(--accent); }
+
+.vcs-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.vcs-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 0;
+  cursor: text;
+}
+.vcs-input::placeholder { color: var(--text-secondary); font-weight: 400; }
+
+.vcs-arrow {
+  color: var(--text-secondary);
+  font-size: 10px;
+  flex-shrink: 0;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.vcs-list {
+  display: none;
+  position: fixed;
+  background: #0d1117;
+  border: 1px solid #2a3050;
+  border-top: 2px solid var(--accent);
+  border-radius: 0 0 4px 4px;
+  z-index: 700;
+  max-height: 180px;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+}
+.vcs-list.open { display: block; }
+
+.vcs-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+  transition: background 0.08s;
+}
+.vcs-item:hover  { background: rgba(255,255,255,0.06); }
+.vcs-item.selected { background: rgba(232,200,74,0.1); color: var(--accent); }
+
+/* Multi-Select Tagged VLANs */
+.vcs-multi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+}
+.vcs-multi-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+.vcs-multi-cb { cursor: pointer; accent-color: var(--accent); }
+.vcs-multi-item label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+/* Farbzeile */
+.vcs-color-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 2px 0;
+}
+.vcs-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  box-sizing: border-box;
+  transition: transform 0.1s, border-color 0.1s;
+  flex-shrink: 0;
+}
+.vcs-color-dot:hover  { transform: scale(1.25); }
+.vcs-color-dot.active { border-color: #fff; transform: scale(1.15); }
