@@ -5,6 +5,26 @@ Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0
 
 ---
 
+## [v0.2.9] — 2026-04-19
+
+### Fixed
+- Port-Popover: VLAN-Auswahl wird jetzt korrekt übernommen
+- Ursache: `overflow: hidden` auf `.vlan-popover` hat das VCS-Dropdown während der Einblend-Animation geclippt, weil `transform: translateY()` das Popup temporär zum Containing Block für `position: fixed`-Kinder macht — Dropdown war damit unsichtbar und unklickbar
+- Lösung: `overflow: hidden` entfernt; Flex-Layout mit `overflow-y: auto` auf dem Body reicht aus
+
+---
+
+## [v0.2.8] — 2026-04-19
+
+### Fixed
+- Port-Popover öffnet sich nicht mehr außerhalb des sichtbaren Bereichs
+- Popup-Positionierung ist jetzt viewport-aware: verfügbarer Platz oben/unten wird verglichen, Popup öffnet in die Richtung mit mehr Platz
+- Maximalhöhe wird dynamisch per JS gesetzt (`maxHeight = verfügbarer Platz`)
+- Body des Popovers ist scrollbar (`overflow-y: auto`), Header und Footer bleiben immer sichtbar (`flex-shrink: 0`)
+- Positionierung erfolgt synchron (kein `requestAnimationFrame` mehr) — kein Timing-Problem möglich
+
+---
+
 ## [v0.2.7] — 2026-04-19
 
 ### Added
