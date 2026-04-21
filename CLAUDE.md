@@ -126,3 +126,11 @@ Ports hören auf `dragover` / `drop` und rufen `updatePortVlan()` im Access-Modu
 - Keine ES-Module (`import`/`export`) — alles bleibt globaler Scope
 - `netzwerkpatch.html` nie manuell editieren — immer über `build.py` erzeugen
 - Keine externen Abhängigkeiten hinzufügen (außer Google Fonts im Template)
+
+## LLM Council Skill
+
+Wenn der User "Consult the council:", "Frag andere KIs", "Was denken ChatGPT und Gemini darüber" oder ähnliches sagt — nutze den `llm-council` Skill via Skill-Tool.
+
+Der Skill befragt ChatGPT und Gemini, analysiert deren Antworten und synthetisiert einen Plan mit Quellenangaben.
+
+Voraussetzung: `.env`-Datei im Projektverzeichnis mit API-Keys (siehe `~/.claude/skills/llm-council/.env.template`).
